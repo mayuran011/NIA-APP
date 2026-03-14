@@ -9,6 +9,7 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "build": "vite build",
     "start": "node server/index.js",
+    "db:schema": "node server/scripts/run-schema.js",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "cd server && npm run dev",
     "client:dev": "cd client && npm run dev"

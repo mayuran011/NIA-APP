@@ -104,3 +104,15 @@ npm run dev
 | `.env.example` | Template for env vars; copy to `.env` locally |
 
 The PHP app (views, moderator, ajax, etc.) remains in the repo for reference or gradual migration; the live stack is React + Node.js using the same database.
+
+## 6. Update database (schema)
+
+To create or sync tables (e.g. after a new DB or schema change):
+
+- **From your machine:** ensure `.env` has `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (and optional `DB_PREFIX`). Then run:
+  ```bash
+  npm run db:schema
+  ```
+  This runs `lib/schema.sql` (CREATE TABLE IF NOT EXISTS, INSERT IGNORE) against your database.
+
+- **Existing installs:** if tables already exist and you only need new columns, run `lib/schema-updates.sql` in phpMyAdmin (it uses stored procedures and is intended for manual run).
