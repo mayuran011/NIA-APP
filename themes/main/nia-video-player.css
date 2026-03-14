@@ -1,0 +1,520 @@
+/**
+ * Nia Video Player — YouTube-style, responsive, mobile-first.
+ * Uses theme vars: --pv-primary, --pv-bg, --pv-text, --pv-text-muted, --pv-border.
+ */
+.nia-video-player {
+    --nia-vp-bg: var(--pv-bg, #0f0f0f);
+    --nia-vp-bar: var(--pv-bg-elevated, #212121);
+    --nia-vp-text: var(--pv-text, #fff);
+    --nia-vp-muted: var(--pv-text-muted, #aaa);
+    --nia-vp-accent: var(--pv-primary, #ff0000);
+    --nia-vp-accent-hover: var(--pv-primary-dark, #cc0000);
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    background: var(--nia-vp-bg);
+    font-family: var(--pv-font-sans, system-ui, sans-serif);
+    overflow: hidden;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+.nia-watch-player .nia-video-player,
+.nia-watch-player .nia-player-container,
+.nia-video-player.nia-vp-in-wrapper {
+    padding-bottom: 0;
+    height: 100%;
+}
+.nia-video-player * {
+    box-sizing: border-box;
+}
+
+/* Media area: video or iframe fills container */
+.nia-vp-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 1;
+}
+.nia-vp-media .nia-vp-video,
+.nia-vp-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+}
+.nia-vp-media .nia-vp-iframe-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+.nia-vp-media .nia-vp-iframe-wrap iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    border: 0;
+    display: block;
+}
+
+/* Hide all YouTube links in player */
+.nia-video-player a[href*="youtube.com"],
+.nia-video-player a[href*="youtu.be"] {
+    display: none !important;
+}
+
+/* Hide YouTube UI in embed: title, buttons, logo, "Watch on YouTube" */
+.nia-vp-yt-cover {
+    position: absolute;
+    z-index: 3;
+    pointer-events: auto;
+}
+/* Top bar — fully hides YouTube title (opaque, not visible) */
+.nia-vp-yt-cover-top {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    background: #0f0f0f;
+    cursor: default;
+    pointer-events: auto;
+}
+/* Bottom bar — fully hides YouTube controls (opaque, not visible) */
+.nia-vp-yt-cover-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #0f0f0f;
+    pointer-events: auto;
+}
+/* Corner — fully hides "Watch on YouTube" and logo (opaque) */
+.nia-vp-yt-cover-corner {
+    bottom: 0;
+    right: 0;
+    width: 240px;
+    height: 90px;
+    background: #0f0f0f;
+    pointer-events: auto;
+}
+/* Right panel — fully hides "More videos" / end-screen recommendations (opaque) */
+.nia-vp-yt-cover-more {
+    top: 90px;
+    right: 0;
+    bottom: 60px;
+    width: 38%;
+    min-width: 200px;
+    max-width: 320px;
+    background: #0f0f0f;
+    pointer-events: auto;
+}
+
+.nia-vp-poster {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #000;
+    pointer-events: none;
+}
+.nia-video-player.nia-vp-playing .nia-vp-poster {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Big play button (center overlay) */
+.nia-vp-big-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 76px;
+    height: 76px;
+    min-width: 76px;
+    min-height: 76px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.nia-vp-big-play:hover {
+    background: var(--nia-vp-accent);
+    transform: translate(-50%, -50%) scale(1.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.nia-vp-big-play:active {
+    transform: translate(-50%, -50%) scale(0.97);
+}
+.nia-vp-big-play:focus {
+    outline: 2px solid var(--nia-vp-accent);
+    outline-offset: 3px;
+}
+.nia-video-player.nia-vp-playing .nia-vp-big-play {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.nia-vp-big-play .nia-vp-icon-play {
+    margin-left: 5px;
+}
+
+/* Loading state */
+.nia-vp-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    z-index: 4;
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.nia-video-player.nia-vp-loading .nia-vp-loading {
+    opacity: 1;
+}
+.nia-vp-loading::before {
+    content: "";
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--nia-vp-accent);
+    border-radius: 50%;
+    animation: nia-vp-spin 0.65s linear infinite;
+}
+@keyframes nia-vp-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Controls bar (bottom) — single cohesive strip over video */
+.nia-vp-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    background: linear-gradient(to top, rgba(15, 15, 15, 0.98) 0%, rgba(15, 15, 15, 0.92) 85%, transparent);
+    color: var(--nia-vp-text);
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.nia-video-player:hover .nia-vp-controls,
+.nia-video-player.nia-vp-controls-visible .nia-vp-controls,
+.nia-video-player:focus-within .nia-vp-controls {
+    opacity: 1;
+}
+
+/* Progress bar (above the button row) */
+.nia-vp-progress-wrap {
+    margin-bottom: 12px;
+    cursor: pointer;
+    touch-action: none;
+    padding: 6px 0;
+    margin-left: -6px;
+    margin-right: -6px;
+    border-radius: 3px;
+}
+.nia-vp-progress-wrap:hover {
+    margin-bottom: 11px;
+}
+.nia-vp-progress {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+    transition: height 0.15s ease, background 0.15s ease;
+}
+.nia-vp-progress-wrap:hover .nia-vp-progress,
+.nia-video-player.nia-vp-seeking .nia-vp-progress {
+    height: 7px;
+    background: rgba(255, 255, 255, 0.32);
+}
+.nia-vp-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--nia-vp-accent);
+    border-radius: 3px;
+    transition: width 0.08s linear;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.35);
+}
+
+/* Button row */
+.nia-vp-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.nia-vp-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+.nia-vp-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+.nia-vp-btn:active {
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(0.96);
+}
+.nia-vp-btn:focus {
+    outline: 2px solid var(--nia-vp-accent);
+    outline-offset: 2px;
+}
+.nia-vp-btn .material-icons,
+.nia-vp-btn .nia-vp-icon {
+    font-size: 23px;
+}
+.nia-vp-time,
+.nia-vp-time-sep,
+.nia-vp-duration {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    user-select: none;
+    margin: 0 8px 0 4px;
+}
+.nia-vp-time-sep {
+    margin: 0 3px;
+    opacity: 0.6;
+}
+.nia-vp-spacer {
+    flex: 1;
+    min-width: 16px;
+}
+.nia-vp-volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.nia-vp-volume-wrap .nia-vp-volume-range {
+    width: 0;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.2s ease;
+}
+.nia-vp-volume-wrap:hover .nia-vp-volume-range,
+.nia-vp-volume-wrap:focus-within .nia-vp-volume-range {
+    width: 64px;
+    opacity: 1;
+}
+.nia-vp-volume-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 3px;
+    cursor: pointer;
+}
+.nia-vp-volume-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--nia-vp-accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.nia-vp-volume-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--nia-vp-accent);
+    cursor: pointer;
+    border: 0;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Settings menu (cog) */
+.nia-vp-settings-menu {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    padding: 12px 14px;
+    background: rgba(24, 24, 24, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    min-width: 176px;
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+.nia-video-player.nia-vp-settings-open .nia-vp-settings-menu {
+    display: block;
+}
+.nia-vp-settings-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.nia-vp-speed-select {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: var(--nia-vp-text);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.nia-vp-speed-select:hover,
+.nia-vp-speed-select:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    outline: none;
+}
+.nia-vp-settings-subtitles {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--nia-vp-text);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+.nia-vp-settings-subtitles:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* AirPlay & Cast buttons */
+.nia-vp-cast-wrap {
+    position: relative;
+}
+.nia-vp-airplay,
+.nia-vp-cast {
+    /* Shown by default; JS hides AirPlay when not supported */
+}
+.nia-vp-cast-tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    padding: 9px 14px;
+    background: rgba(24, 24, 24, 0.96);
+    color: var(--nia-vp-text);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 10px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+.nia-video-player.nia-vp-cast-tooltip-visible .nia-vp-cast-tooltip {
+    opacity: 1;
+}
+
+/* Responsive: compact bar on small screens */
+@media (max-width: 480px) {
+    .nia-vp-controls {
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+    .nia-vp-big-play {
+        width: 64px;
+        height: 64px;
+        min-width: 64px;
+        min-height: 64px;
+        font-size: 26px;
+    }
+    .nia-vp-btn {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+    }
+    .nia-vp-btn .material-icons,
+    .nia-vp-btn .nia-vp-icon {
+        font-size: 22px;
+    }
+    .nia-vp-time,
+    .nia-vp-duration {
+        font-size: 12px;
+    }
+    .nia-vp-volume-wrap:hover .nia-vp-volume-range,
+    .nia-vp-volume-wrap:focus-within .nia-vp-volume-range {
+        width: 52px;
+    }
+}
+
+/* Fullscreen: player fills viewport */
+.nia-video-player.nia-vp-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    padding-bottom: 0;
+    z-index: 9999;
+}
+.nia-video-player.nia-vp-fullscreen .nia-vp-media .nia-vp-video,
+.nia-video-player.nia-vp-fullscreen .nia-vp-media video {
+    object-fit: contain;
+}

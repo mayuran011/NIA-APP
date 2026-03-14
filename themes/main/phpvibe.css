@@ -1,0 +1,246 @@
+/**
+ * Nia App – Main theme
+ * Single theme themes/main/; Bootstrap 5 compat; design tokens (--pv-*).
+ */
+
+:root {
+    --pv-primary: #6366f1;
+    --pv-primary-dark: #4f46e5;
+    --pv-bg: #0f0f12;
+    --pv-bg-elevated: #18181c;
+    --pv-surface: #1e1e24;
+    --pv-text: #f4f4f5;
+    --pv-text-muted: #a1a1aa;
+    --pv-border: #27272a;
+    --pv-radius: 0.75rem;
+    --pv-radius-sm: 0.5rem;
+    --pv-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    --pv-spacing: 1rem;
+    --pv-spacing-sm: 0.5rem;
+    --pv-spacing-lg: 1.5rem;
+    --pv-spacing-xl: 2rem;
+    --pv-font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+    /* Cards */
+    --pv-card-bg: var(--pv-surface);
+    --pv-card-border: var(--pv-border);
+    --pv-card-padding: var(--pv-spacing);
+    /* Touch targets (min 44px) */
+    --pv-touch-min: 44px;
+}
+
+/* Light mode (optional) */
+.nia-light,
+html.nia-light {
+    --pv-bg: #f4f4f5;
+    --pv-bg-elevated: #fff;
+    --pv-surface: #fff;
+    --pv-text: #18181b;
+    --pv-text-muted: #71717a;
+    --pv-border: #e4e4e7;
+    --pv-card-bg: var(--pv-surface);
+    --pv-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.nia-light .bg-dark { background-color: var(--pv-bg-elevated) !important; }
+.nia-light .border-secondary { border-color: var(--pv-border) !important; }
+.nia-light .navbar-dark .navbar-nav .nav-link { color: var(--pv-text-muted); }
+.nia-light .navbar-dark .navbar-nav .nav-link:hover { color: var(--pv-text); }
+
+/* Base */
+body {
+    background: var(--pv-bg);
+    color: var(--pv-text);
+    font-family: var(--pv-font-sans);
+    min-height: 100vh;
+}
+
+.nia-title {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Feature cards (home): Bootstrap + icons */
+.nia-feature-card {
+    transition: border-color 0.2s, transform 0.15s;
+}
+.nia-feature-card:hover {
+    border-color: var(--pv-primary) !important;
+    transform: translateY(-2px);
+}
+.nia-features .text-muted { color: var(--pv-text-muted) !important; }
+
+.nia-main {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--pv-spacing);
+    padding-right: var(--pv-spacing);
+}
+
+/* Bootstrap compat: cards use tokens */
+.card {
+    background: var(--pv-card-bg);
+    border: 1px solid var(--pv-card-border);
+    border-radius: var(--pv-radius);
+    box-shadow: var(--pv-shadow);
+}
+.card-body { padding: var(--pv-card-padding); }
+.card-header {
+    background: var(--pv-bg-elevated);
+    border-bottom: 1px solid var(--pv-border);
+    border-radius: var(--pv-radius) var(--pv-radius) 0 0;
+    padding: var(--pv-spacing);
+}
+
+.text-muted { color: var(--pv-text-muted) !important; }
+
+.btn-primary {
+    background: var(--pv-primary);
+    border-color: var(--pv-primary);
+}
+.btn-primary:hover {
+    background: var(--pv-primary-dark);
+    border-color: var(--pv-primary-dark);
+}
+
+/* Nav */
+.nia-nav a {
+    color: var(--pv-text-muted);
+    text-decoration: none;
+    padding: var(--pv-spacing-sm) var(--pv-spacing);
+    border-radius: var(--pv-radius-sm);
+    min-height: var(--pv-touch-min);
+    display: inline-flex;
+    align-items: center;
+}
+.nia-nav a:hover {
+    color: var(--pv-text);
+    background: var(--pv-bg-elevated);
+}
+
+/* Icons: Material Icons compat */
+.material-icons {
+    font-size: 1.25rem;
+    vertical-align: middle;
+}
+.nia-nav .material-icons { margin-right: 0.25rem; }
+
+/* Layout */
+.nia-layout {
+    min-height: calc(100vh - 56px);
+    display: flex;
+}
+.nia-sidebar {
+    width: 220px;
+    min-width: 220px;
+    min-height: 100%;
+    background: var(--pv-bg-elevated);
+    border-right: 1px solid var(--pv-border);
+    flex-shrink: 0;
+}
+.nia-sidebar .nav-link {
+    min-height: var(--pv-touch-min);
+    padding-left: var(--pv-spacing);
+    padding-right: var(--pv-spacing);
+}
+.nia-content {
+    min-width: 0;
+    flex: 1;
+}
+
+/* Video/media tiles (card-style) */
+.nia-tile {
+    background: var(--pv-card-bg);
+    border: 1px solid var(--pv-card-border);
+    border-radius: var(--pv-radius);
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nia-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pv-shadow);
+}
+.nia-tile-link {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+.nia-tile-thumb {
+    aspect-ratio: 16 / 9;
+    background: var(--pv-bg);
+    object-fit: cover;
+    width: 100%;
+}
+.nia-tile-body { padding: var(--pv-spacing); }
+.nia-tile-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.nia-tile-meta { font-size: 0.8125rem; color: var(--pv-text-muted); }
+
+/* Pull-to-refresh */
+.nia-ptr {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pv-bg-elevated);
+    border-bottom: 1px solid var(--pv-border);
+    transform: translateY(-100%);
+    transition: transform 0.2s ease;
+    z-index: 1040;
+}
+.nia-ptr.visible { transform: translateY(0); }
+.nia-ptr .material-icons { margin-right: 0.5rem; }
+
+/* Sidebar overlay (mobile) */
+@media (max-width: 991.98px) {
+    .nia-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        max-width: 85vw;
+        min-height: 100vh;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 1035;
+        box-shadow: var(--pv-shadow);
+    }
+    .nia-sidebar.open { transform: translateX(0); }
+    .nia-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        z-index: 1030;
+    }
+    .nia-sidebar-backdrop.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .nia-content { margin-left: 0; }
+}
+
+.nia-footer {
+    background: var(--pv-bg-elevated);
+    border-color: var(--pv-border) !important;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}

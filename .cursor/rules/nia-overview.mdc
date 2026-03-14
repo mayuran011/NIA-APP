@@ -1,0 +1,129 @@
+---
+description: Nia App routing, structure, and conventions so code fits the platform.
+globs: **/*.php, **/*.css, **/.htaccess
+---
+
+# Nia App – Structure and Conventions
+
+**Nia App** — Video Sharing CMS: upload, FFmpeg, YouTube importer, images and music, video ads, channels. **Nia App : video sharing and multimedia.** UI: Bootstrap 5, Material Icons.
+
+**In short:** Video/music/image sharing platform with users, profiles, playlists (Watch later, History), search, embed, payments/premium, messaging, blog/pages, full admin, PWA and background audio, and a plugin/hook system—all driven by the routes and options above.
+
+## Features (summary)
+
+Video & music (upload, remote, embed, FFmpeg, multiple players, subtitles); **images** (galleries, tags); **channels** (categories, hierarchical); **upload & processing** (generic, MP3, FFmpeg); **YouTube importer** (admin); **video ads** (VAST/IMA, placement hooks); **users & profiles** (Watch later, History, Likes, playlists, dashboard); **payments & premium**; **messaging**; **blog & pages**; **search** (global, live, dedicated); **embed & API**; **PWA & background audio**; **multi-language** (RTL, switcher); **full admin** (moderator panel); **plugins & hooks**.
+
+## Systems (summary)
+
+Config & security (nia_config, guards, auth, setup); routing & options; full-page cache; query cache; tracking (track.php, track-img.php); Bootstrap & icons (theme).
+
+## Entry and config
+- **index.php** – Single entry; all requests rewritten here via .htaccess. Redirects to **/setup/** when `hold.json` exists or config file is missing.
+- **nia_config.php** – DB (DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_CHARSET, DB_PREFIX), SITE_URL, ADMINCP, MEDIA_FOLDER, TMP_FOLDER, CACHE_ENABLED; COOKIEKEY, SECRETSALT; FB_*/GOOGLE_* (OAuth); PAYPAL_*; SMTP_*, MAIL_FROM. Defines ABSPATH; redirects to /setup/ when `hold.json` exists; then loads `app/bootstrap.php`.
+- **app/bootstrap.php** – Sets `in_nia_app`, starts session, loads `lib/class.db.php`, `init_options()`, helpers, plugins. Use `global $db` where needed.
+
+## Security and config
+- **Config (nia_config.php)**: Database credentials, SITE_URL, ADMINCP, cache toggle (CACHE_ENABLED), PayPal (PAYPAL_CLIENT_ID, PAYPAL_SECRET), mail/SMTP (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM), Facebook/Google OAuth (FB_APP_ID, FB_APP_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET), security (COOKIEKEY, SECRETSALT). See file docblock for full list.
+- **Guards**: Constant **in_nia_app** is set in `app/bootstrap.php`; all app PHP (views, moderator, ajax, functions) must guard with `if (!defined('in_nia_app')) exit;` so scripts cannot be included outside the app. **Session/cookie auth**: session stores `$_SESSION['uid']`; **app/functions/functions.auth.php** (auth_login, auth_register, auth_logout); **COOKIEKEY**/ **SECRETSALT** from config or options. **Moderator/admin**: **moderator/index.php** requires `is_logged()` and `is_moderator()` (redirect to login otherwise); **is_moderator($user)** and **is_admin($user)** in **app/functions/functions.users.php** (group_id admin/moderator). Optional **reCAPTCHA**: **app/ajax/recaptchalib.php** provides **recaptcha_verify($response, $remote_ip)**; use option **recaptcha_secret_key** (or define RECAPTCHA_SECRET_KEY); when not set, verify returns true.
+- **Setup**: **setup/** – install DB, create admin, config check. When **hold.json** exists in project root or config file is missing, **index.php** and **nia_config.php** redirect to **/setup/** so the site cannot be used until setup is complete.
+
+## Routing
+- **index.php** + **nia_config.php** – Where routing/URL structure is defined; SEO overrides come from options.
+- **app/router.php** – `nia_get_path()`, `nia_resolve_seo_segment()` (SEO overrides), `nia_match_routes($path)` → [route_name, section], `nia_dispatch()`.
+- Routes map to **views/*.route.php**; admin path is **moderator/** (ADMINCP).
+- **Route table**: / (home), /video/:id/:name, /image/:id/:name, /profile/:name/:id/, /videos/:section, /music/:section, /images/:section, /category/, /musicfilter/, /imagefilter/, /playlist/:name/:id/, /lists/:section, /albums/:section, /album/:section, /show/:section (search), /imgsearch/, /pplsearch/, /playlistsearch/, /tag/:section, /add-video|add-music|add-image/, /share/:section, /me/:section, /dashboard/:section, /activity/:section, /users/:section, /login/, /register/, /conversation/:id, /msg/:section, /payment/:section, /premiumhub/:section, /blog/, /read/:name/:id (blog/static), /embed/:section, /feed/:section, /api/:section, /forward/:section.
+- **SEO options** (override first segment): video-seo-url, image-seo-url, profile-seo-url, channel-seo-url, page-seo-url, article-seo-url.
+
+## Paths and URLs
+- **url($path)** – Full URL from SITE_URL + path.
+- **video_url($id, $name)**, **image_url($id, $name)**, **profile_url($name, $id)**, **page_url($name, $id)**, **article_url($name, $id)**, **playlist_url($name, $id)**, **conversation_url($id)** – Use SEO options when set.
+- **ABSPATH** – Project root with trailing slash. Use for includes: `ABSPATH . 'views' . DIRECTORY_SEPARATOR . 'file.php'`.
+- **Theme**: Single theme **themes/main/**; Bootstrap 5 (CDN) + compat layer; **nia.css** design tokens (--pv-primary, --pv-bg, --pv-spacing, --pv-card-*, --pv-touch-min 44px). **Layout**: tpl.header.php, tpl.footer.php, sidebar.php; responsive; sidebar overlay on small screens (toggle + backdrop), touch targets. **Icons**: Material Icons (global + compat). **Features**: Pull-to-refresh on list pages (main[data-pull-to-refresh]); Activity link in header (notifications); Watch later / History in header and sidebar; live search on **/show** (livesearch.php); **dark mode** via option (admin Settings) or session (app/ajax/theme.php?mode=light|dark), body class nia-light when light. **Home**: Sectioned blocks from option **homepage_boxes** (video, music, image, playlist, channel, html); card-style tiles (nia-tile, nia-tile-thumb, nia-tile-body); configurable in Admin → Homepage.
+
+## Database
+- **lib/class.db.php** – NiaDB::instance(), PDO; prefix via `$db->prefix()` (nia_).
+- **Tables (prefix nia_)**: options, users, users_groups, users_friends, videos, images, channels, playlists, playlist_data, likes, activity, comments, comment_likes, reports, conversation, conversation_data, blogcat, posts, pages, payments. Schema: **lib/schema.sql**. (Homepage layout = option homepage_boxes, not a table.)
+
+## Content types and media
+- **Videos/music**: Same table `nia_videos`; type = 'video' | 'music'; thumb, duration, views, likes, category_id, nsfw, featured, private, premium; source (local, remote, embed); **app/classes/class.providers.php** (NiaProviders) for YouTube, Vimeo, Dailymotion, Twitch, Facebook, SoundCloud, Vine.
+- **Images**: `nia_images`; upload or remote; galleries/albums, thumbnails, tags.
+- **Channels/categories**: `nia_channels`; hierarchical; video/music/image; browse and filtering.
+- **Playlists**: User playlists (video or image). System playlists: **PLAYLIST_LIKES** [likes], **PLAYLIST_HISTORY** [history], **PLAYLIST_LATER** [later]. **app/functions/functions.media.php**: get_video, get_videos, get_image, get_images, get_channel, get_channels, get_playlist, get_playlist_items, ensure_system_playlists.
+- **Add to playlist**: **app/ajax/addto.php** (action=later|history|likes|playlist, media_id, media_type, playlist_id). **app/ajax/playlist-add.php** (action=create|add). UI: header "Add to playlist" dropdown + Watch later / History; sidebar Library (Watch later, History, Likes, Playlists). Set **data-nia-media-id** and **data-nia-media-type** on body on video/image page for JS addto.
+- **Music layouts**: **themes/main/box_music.php** (list), **themes/main/music-loop.php** (carousel); pass $items and optional $title.
+
+## Search
+- **Global search** (**/show/**): By keyword; type filter: videos, music, pictures, channels, playlists. **app/functions/functions.search.php**: **search_global($q, $type, $limit, $offset)** returns [ videos, images, channels, playlists ]; **search_suggestions($q, $per_section)** for live suggestions. **views/show.route.php**: form (q, type), results by type, and **live search** dropdown (from first character) powered by **app/ajax/livesearch.php** (JSON: videos, music, playlists, channels with url/title/name).
+- **Dedicated search routes and backend**: **/imgsearch/** (views/imgsearch.route.php) – image search by title/tags/description; **/pplsearch/** (views/pplsearch.route.php) – people/channels by name/username; **/playlistsearch/** (views/playlistsearch.route.php) – playlists by name/slug.
+
+## Players and embed
+- **app/classes/class.players.php** – NiaPlayers::render($video, $opts). Players: JW Player, FlowPlayer, jPlayer, VideoJS; for music: VideoJS + WaveSurfer (vjswaveplayer). Options: **choosen-player** (videojs|jwplayer|flowplayer|jplayer), **remote-player** (embed|same), **youtube-player** (embed), **jwkey**, **player-logo**. playbackUrl() uses **stream_url()** for local; provider embed URL for YouTube/Vimeo/etc.
+- **app/functions/functions.stream.php** – **stream_url($id, $quality)** for hidden playback URL. **stream.php** (root): serves file by id + optional quality (multi-quality: media/videos/ID/720.mp4, default.mp4, or nia_videos.file_path); Range support; private/premium via get_video().
+- **Embed** (**/embed/:section**): **views/embed.route.php** – minimal iframe page, one video/music via NiaPlayers::render(); **Media Session API** (title, artist, artwork, play/pause/previous/next/stop) for PWA/background/lock-screen playback. Query: ?autoplay=1. Tip: "Add to Home Screen" for better background play on iOS. Service worker registered here too.
+- **RSS** (**/feed/:section**): **views/feed.route.php** – RSS 2.0; section = all (default), video, music, images; site name, URLs, thumbnails (media:thumbnail); limit 50.
+- **API** (**/api/:section**): **views/api.route.php** – public JSON: GET /api/videos, /api/music, /api/images (list; limit, offset); /api/video/:id, /api/image/:id (single); /api/search?q=&type=; CORS Allow-Origin *.
+- **PWA and background audio**: **app/favicos/site.webmanifest.php** – manifest (name, short_name, start_url, display, icons 192/512, theme_color, background_color); options **theme_color**, **background_color** (admin Settings). **sw.js** (root): minimal service worker; offline "You're offline" for navigate requests; registered from **tpl.footer.php** and **views/embed.route.php**. Media Session API on embed and main video page (**video.route.php**): title, artist, artwork; actions play/pause/stop/previoustrack/nexttrack; playbackState. Add icon-192.png and icon-512.png in app/favicos for "Add to Home Screen".
+
+## User system
+- **Auth**: Email/password (login, register, forgot password); Facebook & Google OAuth via **callback.php** (config in nia_config.php FB_APP_ID, FB_APP_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET). Session + cookie; **COOKIEKEY**, **SECRETSALT** from options or config. **app/functions/functions.auth.php**: auth_login, auth_register, auth_logout, auth_forgot_password.
+- **Users**: **nia_users** (name, username, email, avatar, group_id, last_login); **nia_users_groups**: admin (1), moderator (2), premium (3), default (4). **app/functions/functions.users.php**: get_user, get_user_by_username, get_user_by_email, current_user, is_admin, is_moderator, user_group_name.
+- **Profile** (**/profile/:name/:id/**): Public profile; tabs: videos, music, playlists, likes, about; **subscribe** button. **app/ajax/subscribe.php** (action=subscribe|unsubscribe, user_id). **nia_users_friends**: subscribe/unsubscribe; **subscriber_count($user_id)**, **is_subscribed_to($user_id)**, **subscribe_to**, **unsubscribe_from** in **functions.subscriptions.php**.
+- **Manager** (**/me/:section**): Library (Likes, History, Watch later, Playlists), Manage (edit/delete own media). Requires login.
+- **Dashboard** (**/dashboard/:section**): Settings (edit profile), Activity feed, Media Studio, Messages link; for admins/moderators: link to **ADMINCP** (e.g. /moderator/).
+- **Admin (moderator)**: Base path from **ADMINCP** (e.g. /moderator/). **moderator/index.php** – auth (is_moderator()), parses `$_GET['section']` → first segment, includes **moderator/pages/{section}.php**. **moderator/inc/**: header.php, sidebar.php, footer.php, **functions.php** (admin_url($path), admin_section(), admin_subsection(), admin_segment($i)). **moderator/pages/**: **dashboard** (overview, recent users/videos), **videos** / **music** / **images** (list, search, edit, delete, featured, publish/unpublish), **channels** (create/edit, type video|music|image), **playlists** (list, edit), **users** (list, create, edit, user groups), **comments** (moderate, delete), **reports** (list, dismiss, delete content), **ads** (VAST URL, placement), **homepage** (boxes JSON: video/music/image/playlist/channel/html), **seo** (permalinks, meta), **settings** (site options, logo, social, players, upload, FFmpeg, cache), **languages**, **plugins** (enable/disable), **cache** (clear), **youtube** (API key, importer), **vine** (legacy), **activity** (log). **update_option($key, $value, $autoload)** in **functions.options.php** for saving options from admin.
+- **Activity (buzz)**: **nia_activity** (user_id, action, object_type, object_id, extra). **add_activity($user_id, $action, $object_type, $object_id, $extra)**; **get_activity($args)**. Actions: liked, disliked, playlist_add, watched, shared, subscribed. Shown on **/dashboard/activity** and **/activity** (views/activity.route.php).
+
+## Payments and premium
+- **Options**: **allowpremium**, **currency**, **price** (get_option). PayPal: config PAYPAL_CLIENT_ID, PAYPAL_SECRET or options paypal_client_id, paypal_secret; **paypal_sandbox** (1 = sandbox).
+- **Premium helpers** (**app/functions/functions.premium.php**): **premium_allowed()**, **premium_price()**, **premium_currency()**, **has_premium($user_id)**, **premium_upto($user_id)**, **set_premium_upto($user_id, $until)**, **can_access_premium_content($video_row, $user_id)**. Premium group (USER_GROUP_PREMIUM) or user.premium_upto &gt; now grants access.
+- **Payment route** (**/payment/**): **views/payment.route.php** – plan/price, "Pay with PayPal"; **app/ajax/payment-create.php** POST → **payment_create_paypal_order()** (in **functions.payment.php**), redirect to PayPal; **/payment?action=return&token=** or **/payment/return** → **payment_handle_return()** (capture, set_premium_upto, log in nia_payments). **/payment?action=cancel** or **/payment/cancel** → redirect back.
+- **Premium hub** (**/premiumhub/**): List premium content (videos where premium=1); if has_premium show content and "Extend"; else "Get Premium" CTA. Premium-only video page: **can_access_premium_content()** false → upgrade card and link to payment/premiumhub.
+
+## Communication (messaging)
+- **Conversations**: **nia_conversation** (user_one_id, user_two_id; unique pair), **nia_conversation_data** (conversation_id, user_id, body, created_at). Two-way private messages.
+- **app/functions/functions.conversations.php**: **get_or_create_conversation($user_id, $other_user_id)**, **get_conversation($id, $user_id)**, **get_conversations($user_id)** (inbox list), **get_conversation_messages($conversation_id, $limit, $offset)**, **send_conversation_message($conversation_id, $user_id, $body)**.
+- **Routes**: **/msg/** – inbox (views/msg.route.php), list of conversations with last message preview; **/conversation/:id** – single thread (views/conversation.route.php), messages and reply form.
+- **UI**: Messages link in header (icon + "Messages" when logged in). Profile page: "Message" button for other users (get_or_create_conversation then link to conversation).
+
+## Blog and pages
+- **Blog**: **nia_posts** (articles), **nia_blogcat** (categories). **article_url()**, **article-seo-url**. **functions.blog.php**: get_post, get_posts, get_blogcat, get_blogcats, blogcat_url. **Static pages**: **nia_pages**. **page_url()**, **page-seo-url** (/read/:name/:id). get_page, get_pages.
+- **Templates**: **blog.route.php** (list posts), **blogcat.route.php** (/blogcat/:slug), **read.route.php** (dispatcher for /read/:name/:id), **post.route.php** (article, $post), **page.route.php** (static, $page).
+
+## Engagement and moderation
+- **Likes/dislikes**: **nia_likes** (user_id, object_type, object_id, value 1/-1). **app/ajax/like.php**, **app/ajax/dislike.php**, **app/ajax/heart.php** (heart = like). **functions.engagement.php**: get_user_like(), set_like(); updates nia_videos.likes (net sum) for video.
+- **Comments**: **nia_comments** (parent_id, object_type, object_id, user_id, body, likes_count), **nia_comment_likes**. Threaded; object types video, image. **app/ajax/addComment.php** (body, parent_id), **app/ajax/morecoms.php** (object_type, object_id, parent_id, offset), **app/ajax/likeComment.php**, **app/ajax/delComment.php**. get_comments(), add_comment(), like_comment(), delete_comment(). **themes/main/comments-section.php** on video page; reply UI with parent_id.
+- **Reports**: **nia_reports** (user_id, object_type, object_id, reason, details). **app/ajax/report.php** (reason: spam, copyright, harassment, violence, other). Report modal on video page (Bootstrap modal, form to report).
+- **NSFW**: Flag on content (nia_videos.nsfw). Optional age confirmation: if nsfw and no ?nsfw=1 or session nsfw_ok, show gate page with "Continue" (POST nsfw_confirm sets session, redirect with ?nsfw=1).
+
+## Options and helpers
+- **Options**: Stored in **nia_options**; rows with autoload=1 are loaded at bootstrap and cached in memory (e.g. no jcache; in-process cache). **get_option($key, $default)**; **update_option($key, $value, $autoload)**. Filterable: option_{key}, the_defaults.
+- Option keys control: **theme** (sitename, theme_color, background_color, dark_mode), **players** (choosen-player, jwkey, player-logo), **upload** (mediafolder, tmp-folder, ffmpeg-cmd, binpath), **SEO** (video-seo-url, image-seo-url, profile-seo-url, etc., meta_description, meta_keywords), **social login** (fb_app_id, google_client_id, …), **premium** (allowpremium, price, currency, paypal_*), **homepage** (homepage_boxes JSON), **plugins** (plugins_enabled), **cache** (cache_enabled, cache_ttl), ads, languages. Optional: **bpp** (items per page), **thumb_width**, **thumb_height**.
+- **_e($s)** – Escape for HTML. **redirect($url)**. **is_logged()**, **current_user_id()**.
+
+## Plugins and extensibility
+- **app/functions/functions.plugins.php**: **add_filter($tag, $callback, $priority)**, **apply_filters($tag, $value, ...$args)**, **add_action($tag, $callback, $priority)**, **do_action($tag, ...$args)**; **remove_filter($tag, $callback)**, **remove_action($tag, $callback)**. **vibe_load_plugins()** loads enabled plugins from option **plugins_enabled** (comma-separated); each **app/plugins/{slug}/plugin.php** is required at bootstrap.
+- **Hooks**: **VibePermalinks** / **video_url**, **image_url** (apply_filters on URL); **the_defaults** (filter default option value when key missing); **option_{key}** (filter single option in get_option); **vibe_header** (action after &lt;body&gt;); **vibe_footer** (action before &lt;/body&gt;); **add-activity** (action when activity row is added); **get-activity** (filter activity results); **the_embedded_video** (filter player HTML, video, opts); **vibe_before_player**, **vibe_after_player** (actions for ad placement in theme/player: container_id, video, opts); **the_navigation** (filter nav items); **vibe_plugin_settings** (action in Admin Settings – plugins output options card); **vibe_plugin_settings_save** (action on save, receives $_POST).
+- **Bundled plugins** (under **app/plugins/**): **videodown** – download video/audio link on single page (options: videodown_enabled, videodown_label); uses **the_embedded_video** filter and stream.php?download=1. **cookiesfree** – cookie consent banner (options: cookiesfree_enabled, cookiesfree_message, cookiesfree_accept); hooks **vibe_header**. Each registers options and UI via **vibe_plugin_settings** / **vibe_plugin_settings_save**. Enable in Admin → Plugins (plugins_enabled).
+
+## Upload and processing
+- **Storage**: Options **mediafolder**, **tmp-folder** (fallback: MEDIA_FOLDER, TMP_FOLDER). **app/functions/functions.upload.php**: **media_folder()**, **tmp_folder()**, **ffmpeg_path()** (options **ffmpeg-cmd** or **binpath**); **ffmpeg_thumbnail($path, $out_path)**, **ffmpeg_duration($path)**. Loaded in bootstrap.
+- **Upload**: **app/uploading/upload.php** – generic file upload to tmp; returns JSON (path, full_path, name). **upload_pl.php** includes it. **upload-mp3.php** – MP3/m4a/ogg/wav → media/videos/{id}/default.{ext}, insert nia_videos (type=music, source=local), optional ffmpeg_duration. **upload-ffmpeg.php** – POST video_id or path; runs ffmpeg_thumbnail; if video_id, updates nia_videos.thumb (e.g. /media/videos/{id}/thumb.jpg).
+- **Remote/embed**: **app/ajax/addVideo.php** – POST **url** (or **embed_code**) + **type** (video|music); **NiaProviders::detect()**; fetch metadata (oEmbed) for YouTube/Vimeo via **NiaProviders::fetchMetadata()**; insert nia_videos (user_id, title, type, source, remote_url, embed_code, thumb); returns JSON (ok, id, url, title).
+- **Share by URL**: **views/share.route.php** – form with URL input; submit → detect provider, optionally fetch metadata; show preview (title, thumb); "Add to my content" (action=add) inserts same as addVideo and redirects to video page.
+- **Stream-only**: Optional "hide" MP4 (no direct link); serve only via **stream.php** (id + quality, Range support, private/premium check).
+
+## Other systems
+- **Multi-language**: Languages from options (**default_language**, **languages_enabled**); **app/functions/functions.language.php**: **init_lang()** (call at bootstrap), **_lang($key)** (translate; files in **lang/{code}.php**), **current_lang()**, **is_rtl()** (option **rtl_languages** = comma codes, e.g. ar,he), **enabled_languages()**, **lang_switch_url($code)**. RTL sets `dir="rtl"` on `<html>`; language switcher in **themes/main/sidebar.php**. Admin → Languages: default, enabled list, RTL codes.
+- **Full-page cache**: **lib/fullcache.php** – optional static cache for guests. **nia_fullcache_should_skip()** (true if logged in or `?action=`); **nia_fullcache_get($path, $ttl)** / **nia_fullcache_set($path, $html)**; cache in tmp/fullcache. Wire in router: if !should_skip try get; after render set. Skipped for logged-in or ?action=.
+- **Query cache**: **lib/class.db.php** – **$db->fetchCached($key, $ttl, $callback)** for heavy reads; disk cache in tmp/querycache. Use when cache_enabled or CACHE_ENABLED.
+- **Tracking**: **app/ajax/track.php** – view/play for video|music (media_type, media_id): increments **nia_videos.views**, adds to History if logged in, optional add_activity('watched'). **app/ajax/track-img.php** – image view: increments **nia_images.views**, adds to History. Call from player and image page for stats/history.
+- **Subtitle**: **nia_videos.subtitle_url** (SRT/VTT); VideoJS render adds `<track kind="subtitles">` when set (opts subtitle_url, subtitle_label or video row). Prefer VTT.
+- **Video ads**: Admin → Ads: **ad_type** (vast | ima), **ad_vast_url**, **ad_ima_tag_url** (IMA e.g. vjimaads), **ad_placement** (preroll, midroll, postroll), **ads_enabled**. **Ad placement hooks**: **vibe_before_player** and **vibe_after_player** (container_id, video, opts) in theme/player—use to inject ad divs or IMA scripts; **the_embedded_video** filter to wrap or modify player HTML for IMA (e.g. VideoJS vjimaads).
+
+## Conventions
+- Guard all non-config PHP with `if (!defined('in_nia_app')) exit;`.
+- Use $GLOBALS['nia_route_section'] in route views for segment data.
+- Keep route files thin; move logic to app/classes or app/functions.
+- Ajax endpoints under **app/ajax/** (e.g. livesearch.php); can define ABSPATH and require nia_config.
+
+Make new code follow this layout and naming so everything fits the same structure.

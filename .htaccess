@@ -1,0 +1,21 @@
+# Nia App – clean URLs
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /PHPVIBENEWWEBS/
+
+    # Existing files and directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Send everything else to index.php
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Security
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# PHP (optional; uncomment if needed)
+# php_value upload_max_filesize 128M
+# php_value post_max_size 128M
