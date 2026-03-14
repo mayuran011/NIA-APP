@@ -21,10 +21,19 @@ const isProduction = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+app.locals.dbDown = false;
 
 app.use(cors({ origin: isProduction ? process.env.SITE_URL : true, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
+
+// If DB failed at startup, return 503 for all API calls (so the app still starts and can serve static)
+app.use('/api', (req, res, next) => {
+  if (app.locals.dbDown) {
+    return res.status(503).json({ error: 'Database unavailable', code: 'DB_DOWN' });
+  }
+  next();
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -38,8 +47,11 @@ app.use('/api/search', searchRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/stream', streamRoutes);
 
-// Health check for Hostinger
+// Health check for Hostinger (reports DB status)
 app.get('/api/health', (req, res) => {
+  if (app.locals.dbDown) {
+    return res.status(503).json({ ok: false, error: 'Database unavailable', env: process.env.NODE_ENV || 'development' });
+  }
   res.json({ ok: true, env: process.env.NODE_ENV || 'development' });
 });
 
@@ -65,14 +77,16 @@ app.use((err, req, res, next) => {
 
 async function start() {
   try {
-    await getPool().getConnection();
+    const conn = await getPool().getConnection();
+    conn.release();
   } catch (e) {
     console.error('Database connection failed:', e.message);
-    process.exit(1);
+    console.error('Server will start anyway; API will return 503 until DB is fixed. Check DB_HOST, DB_USER, DB_PASSWORD, and Remote MySQL access.');
+    app.locals.dbDown = true;
   }
   const host = process.env.HOST || '0.0.0.0';
   app.listen(PORT, host, () => {
-    console.log(`Nia App server listening on ${host}:${PORT} (${isProduction ? 'production' : 'development'})`);
+    console.log(`Nia App server listening on ${host}:${PORT} (${isProduction ? 'production' : 'development'})${app.locals.dbDown ? ' [DB unavailable]' : ''}`);
   }).on('error', (err) => {
     console.error('Server failed to start:', err.message);
     process.exit(1);
