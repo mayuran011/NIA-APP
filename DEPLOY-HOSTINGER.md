@@ -43,8 +43,8 @@ Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this
    |----------------|--------|
    | `NODE_ENV`     | `production` |
    | `PORT`         | `3000` (or the port Hostinger assigns) |
-   | `SITE_URL`     | `https://msdeploy.com` |
-   | `DB_HOST`      | `srv1368.hstgr.io` |
+   | `SITE_URL`     | Your app URL (e.g. `https://mediumslateblue-hawk-820028.hostingersite.com`) |
+   | `DB_HOST`      | `srv1368.hstgr.io` or `195.35.59.7` (MySQL server IP if hostname fails) |
    | `DB_NAME`      | `u454323635_niaapp` |
    | `DB_USER`      | `u454323635_niaapp` |
    | `DB_PASSWORD`  | Your MySQL password |
@@ -62,15 +62,20 @@ Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this
 
 The app is not running or not reachable. Do this:
 
-1. **Check deployment / build logs**  
+1. **Set SITE_URL to your actual domain**  
+   For this app use: `https://mediumslateblue-hawk-820028.hostingersite.com` (no trailing slash). If DB connection fails, try `DB_HOST=195.35.59.7` instead of `srv1368.hstgr.io`.
+
+2. **Check deployment / build logs**  
    In hPanel → your Node.js app → **Deployments** (or **Build logs**). Open the latest deployment and look for errors **after** the build step (e.g. "Database connection failed", "Server failed to start", or a stack trace). The app exits on DB failure, so a wrong DB host/password will cause 503.
 
 2. **Environment variables**  
    Confirm in the Node.js app **Environment variables** that all of these are set and correct:
    - `NODE_ENV` = `production`
    - `PORT` = the value Hostinger gives you (often they inject this; if there’s a placeholder like `$PORT`, use that or leave PORT unset only if their docs say so)
-   - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (Remote MySQL: `srv1368.hstgr.io`, `u454323635_niaapp`, etc.)
-   - `JWT_SECRET` = any long random string
+   - `SITE_URL` = `https://mediumslateblue-hawk-820028.hostingersite.com`
+   - `DB_HOST` = `srv1368.hstgr.io` or `195.35.59.7`
+   - `DB_NAME`, `DB_USER`, `DB_PASSWORD` (e.g. `u454323635_niaapp`)
+   - `JWT_SECRET` = a long random string (32+ chars)
 
 3. **Database**  
    Remote MySQL must accept connections from Hostinger’s IP. In hPanel → **Databases** → Remote MySQL, add Hostinger’s outbound IP or use “Allow all” for testing. If the app can’t connect, it exits on startup and you get 503.
