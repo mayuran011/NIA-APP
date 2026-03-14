@@ -2,6 +2,8 @@
 
 This app runs as a **Node.js web app** on Hostinger (hPanel → Node.js), using **Remote MySQL** and deployment from **GitHub**. Domain: **https://msdeploy.com/**
 
+**If you see "Unsupported framework or invalid project structure":** The repo has a root `package.json` (with `main`, `dependencies.express`) and a root `vite.config.js` so Hostinger can detect **Vite + Express**. Ensure you selected **Node.js Apps** (not PHP) when adding the website. Then set the build commands below manually if needed.
+
 ## 1. Database (already set up)
 
 - **MySQL host:** `srv1368.hstgr.io`
@@ -29,13 +31,11 @@ Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this
 1. In **hPanel**, go to **Advanced** → **Node.js** (or **Node.js web app**).
 2. **Create application:**
    - Connect **GitHub**: choose the repo and branch (e.g. `main`).
-   - **Build command:**  
-     `npm run install:all && npm run build`  
-     (installs root + server + client, then builds the React app)
-   - **Start command:**  
-     `npm start`  
-     (runs `node server/index.js`; the server serves both the API and the built React app)
+   - **Install command:** `npm install` (root install + postinstall installs server deps).
+   - **Build command:** `npm run build` (runs Vite; builds React app to `client/dist`).
+   - **Start command:** `npm start` (runs `node server/index.js`; serves API + static React app).
    - **Application root:** leave default (repository root).
+   - If the UI only shows one “Build” field, use: `npm install && npm run build`.
 
 3. **Environment variables** (in the same Node.js app settings):
 
