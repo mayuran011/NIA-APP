@@ -70,9 +70,16 @@ async function start() {
     console.error('Database connection failed:', e.message);
     process.exit(1);
   }
-  app.listen(PORT, () => {
-    console.log(`Nia App server listening on port ${PORT} (${isProduction ? 'production' : 'development'})`);
+  const host = process.env.HOST || '0.0.0.0';
+  app.listen(PORT, host, () => {
+    console.log(`Nia App server listening on ${host}:${PORT} (${isProduction ? 'production' : 'development'})`);
+  }).on('error', (err) => {
+    console.error('Server failed to start:', err.message);
+    process.exit(1);
   });
 }
 
-start();
+start().catch((err) => {
+  console.error('Startup error:', err);
+  process.exit(1);
+});
