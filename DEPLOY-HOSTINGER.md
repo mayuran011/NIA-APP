@@ -4,12 +4,12 @@ This app runs as a **Node.js web app** on Hostinger (hPanel → Node.js), using 
 
 **If you see "Unsupported framework or invalid project structure":** The repo has a root `package.json` (with `main`, `dependencies.express`) and a root `vite.config.js` so Hostinger can detect **Vite + Express**. Ensure you selected **Node.js Apps** (not PHP) when adding the website. Then set the build commands below manually if needed.
 
-## 1. Database (already set up)
+## 1. Database (Remote MySQL – hPanel)
 
-- **MySQL host:** `srv1368.hstgr.io`
-- **Database:** `u454323635_niaapp`
-- **User:** `u454323635_niaapp`
-- **Password:** (use the one you have)
+- **MySQL host:** `srv2061.hstgr.io`
+- **Database:** `u454323635_niaapp_php`
+- **User:** `u454323635_niaapp_php`
+- **Password:** (set in Node.js app env as `DB_PASSWORD`; do not commit)
 
 Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this database if you haven’t already (e.g. from phpMyAdmin or MySQL client).
 
@@ -44,9 +44,9 @@ Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this
    | `NODE_ENV`     | `production` |
    | `PORT`         | `3000` (or the port Hostinger assigns) |
    | `SITE_URL`     | Your app URL (e.g. `https://mediumslateblue-hawk-820028.hostingersite.com`) |
-   | `DB_HOST`      | `srv1368.hstgr.io` or `195.35.59.7` (MySQL server IP if hostname fails) |
-   | `DB_NAME`      | `u454323635_niaapp` |
-   | `DB_USER`      | `u454323635_niaapp` |
+   | `DB_HOST`      | `srv2061.hstgr.io` |
+   | `DB_NAME`      | `u454323635_niaapp_php` |
+   | `DB_USER`      | `u454323635_niaapp_php` |
    | `DB_PASSWORD`  | Your MySQL password |
    | `DB_CHARSET`   | `utf8mb4` |
    | `DB_PREFIX`    | `nia_` |
@@ -63,7 +63,7 @@ Ensure the schema is applied (same as the PHP app): run `lib/schema.sql` on this
 The app is not running or not reachable. Do this:
 
 1. **Set SITE_URL to your actual domain**  
-   For this app use: `https://mediumslateblue-hawk-820028.hostingersite.com` (no trailing slash). If DB connection fails, try `DB_HOST=195.35.59.7` instead of `srv1368.hstgr.io`.
+   e.g. `https://mediumslateblue-hawk-820028.hostingersite.com` (no trailing slash).
 
 2. **Check deployment / build logs**  
    In hPanel → your Node.js app → **Deployments** (or **Build logs**). Open the latest deployment and look for errors **after** the build step (e.g. "Database connection failed", "Server failed to start", or a stack trace). The app exits on DB failure, so a wrong DB host/password will cause 503.
@@ -73,8 +73,8 @@ The app is not running or not reachable. Do this:
    - `NODE_ENV` = `production`
    - `PORT` = the value Hostinger gives you (often they inject this; if there’s a placeholder like `$PORT`, use that or leave PORT unset only if their docs say so)
    - `SITE_URL` = `https://mediumslateblue-hawk-820028.hostingersite.com`
-   - `DB_HOST` = `srv1368.hstgr.io` or `195.35.59.7`
-   - `DB_NAME`, `DB_USER`, `DB_PASSWORD` (e.g. `u454323635_niaapp`)
+   - `DB_HOST` = `srv2061.hstgr.io`
+   - `DB_NAME` = `u454323635_niaapp_php`, `DB_USER` = `u454323635_niaapp_php`, `DB_PASSWORD` = your password
    - `JWT_SECRET` = a long random string (32+ chars)
 
 3. **Database**  
