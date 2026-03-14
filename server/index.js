@@ -17,6 +17,7 @@ import searchRoutes from './routes/search.js';
 import blogRoutes from './routes/blog.js';
 import streamRoutes from './routes/stream.js';
 
+console.log('Nia App: booting...');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
