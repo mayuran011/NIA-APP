@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { fetchOne, fetchAll, p } from '../db.js';
+import { optionalAuth } from './auth.js';
 
 const router = Router();
+router.use(optionalAuth);
 const pre = () => p();
 
 router.get('/', async (req, res) => {

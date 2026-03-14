@@ -9,6 +9,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Search from './pages/Search';
 import Blog from './pages/Blog';
+import Read from './pages/Read';
+import Category from './pages/Category';
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="blog" element={<Blog />} />
+        <Route path="read/:name/:id" element={<Read />} />
+        <Route path="category/:id" element={<Category />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

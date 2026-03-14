@@ -320,3 +320,21 @@ input:focus, textarea:focus {
   padding: 0.5rem 0;
   border-bottom: 1px solid #2e2e34;
 }
+
+.read-page h1 {
+  margin: 0 0 0.25rem;
+}
+
+.read-excerpt {
+  color: var(--pv-muted);
+  margin-bottom: 1rem;
+}
+
+.read-content {
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.read-content p {
+  margin: 0 0 0.75rem;
+}

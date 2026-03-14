@@ -55,3 +55,7 @@ export const blog = {
   },
   post: (id) => request(`/blog/posts/${id}`),
 };
+
+export const channels = {
+  get: (id) => request(`/channels/${id}`),
+};

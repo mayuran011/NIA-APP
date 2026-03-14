@@ -1,28 +1,38 @@
 import { Router } from 'express';
-import { fetchOne, fetchAll, query, p } from '../db.js';
-import { authMiddleware } from './auth.js';
+import { fetchOne, fetchAll, p } from '../db.js';
+import { optionalAuth } from './auth.js';
 
 const router = Router();
+router.use(optionalAuth);
 const pre = () => p();
 
 router.get('/', async (req, res) => {
   const section = req.query.section || 'browse';
+  const categoryId = req.query.category_id != null ? parseInt(req.query.category_id, 10) : null;
   const limit = Math.min(parseInt(req.query.limit, 10) || 24, 48);
   const offset = parseInt(req.query.offset, 10) || 0;
   const pid = pre();
   let order = 'v.created_at DESC';
+  const where = ['v.type = ?', 'v.private = 0'];
+  const params = ['video'];
+
+  if (categoryId != null && !Number.isNaN(categoryId) && categoryId > 0) {
+    where.push('v.category_id = ?');
+    params.push(categoryId);
+  }
   if (section === 'featured') {
+    where.push('v.featured = 1');
     const rows = await fetchAll(
-      `SELECT v.* FROM ${pid}videos v WHERE v.type = 'video' AND v.private = 0 AND v.featured = 1 ORDER BY v.created_at DESC LIMIT ? OFFSET ?`,
-      [limit, offset]
+      `SELECT v.* FROM ${pid}videos v WHERE ${where.join(' AND ')} ORDER BY v.created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
     );
     return res.json(rows);
   }
   if (section === 'most-viewed') order = 'v.views DESC';
   else if (section === 'top-rated') order = 'v.likes DESC';
   const rows = await fetchAll(
-    `SELECT v.* FROM ${pid}videos v WHERE v.type = 'video' AND v.private = 0 ORDER BY ${order} LIMIT ? OFFSET ?`,
-    [limit, offset]
+    `SELECT v.* FROM ${pid}videos v WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
   );
   res.json(rows);
 });

@@ -39,10 +39,13 @@ router.get('/:id', async (req, res) => {
   res.setHeader('Content-Type', mime);
 
   if (range) {
-    const [start, end] = range.replace(/bytes=/, '').split('-').map((x) => parseInt(x, 10) || 0);
-    const s = start;
-    const e = end || size - 1;
-    const chunk = e - s + 1;
+    const parts = range.replace(/bytes=/, '').trim().split('-');
+    const startNum = parseInt(parts[0], 10);
+    const endRaw = parts[1];
+    const endNum = (endRaw === '' || endRaw === undefined) ? undefined : parseInt(endRaw, 10);
+    const s = Number.isNaN(startNum) ? 0 : Math.max(0, startNum);
+    const e = (endNum !== undefined && !Number.isNaN(endNum)) ? Math.min(endNum, size - 1) : size - 1;
+    const chunk = Math.max(0, e - s + 1);
     res.status(206);
     res.setHeader('Content-Range', `bytes ${s}-${e}/${size}`);
     res.setHeader('Accept-Ranges', 'bytes');
