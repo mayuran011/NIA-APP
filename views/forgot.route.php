@@ -6,7 +6,7 @@ if (is_logged()) {
 $message = '';
 $error = '';
 $page_title = 'Forgot password';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'forgot') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'forgot') {
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $res = auth_forgot_password($email);
     if ($res['ok']) {

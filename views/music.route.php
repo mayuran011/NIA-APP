@@ -302,6 +302,65 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
         ?>
 
         <?php
+        $music_per = 24;
+        $music_total = function_exists('get_videos_count') ? get_videos_count(['type' => 'music', 'section' => $route_section]) : 0;
+        $music_total_pages = $music_per > 0 ? max(1, (int) ceil($music_total / $music_per)) : 1;
+        $music_page = isset($_GET['page']) ? max(1, min($music_total_pages, (int) $_GET['page'])) : 1;
+        $music_offset = ($music_page - 1) * $music_per;
+        $music_items = get_videos(['type' => 'music', 'section' => $route_section, 'limit' => $music_per, 'offset' => $music_offset]);
+        $music_items = is_array($music_items) ? $music_items : [];
+        $has_more_music = count($music_items) >= $music_per && $music_page < $music_total_pages;
+        $music_base_url = $route_section === 'browse' ? url('music') : url('music/' . $route_section);
+        if (!empty($music_items)) {
+            $site_url = rtrim(SITE_URL, '/');
+        ?>
+        <section class="nia-music-section">
+            <h2 class="nia-music-section-title mb-3">More music</h2>
+            <div id="nia-music-grid" class="nia-video-grid nia-grid--medium">
+                <?php foreach ($music_items as $item) {
+                    $link = function_exists('media_play_url') ? media_play_url($item->id, 'music', $item->title ?? '') : listen_url($item->id);
+                    $thumb = !empty($item->thumb) ? $item->thumb : '';
+                    if ($thumb !== '' && strpos($thumb, 'http') !== 0) $thumb = $site_url . '/' . ltrim($thumb, '/');
+                    $duration = function_exists('nia_duration') ? nia_duration($item->duration ?? 0) : '';
+                    $timeAgo = function_exists('nia_time_ago') ? nia_time_ago($item->created_at ?? null) : '';
+                    $views = (int) ($item->views ?? 0);
+                    $viewsStr = $views >= 1000000 ? round($views / 1000000, 1) . 'M' : ($views >= 1000 ? round($views / 1000, 1) . 'K' : $views) . ' views';
+                    $channel = isset($item->user_id) ? get_user($item->user_id) : null;
+                    $chanName = $channel ? ($channel->username ?? $channel->name ?? '') : '';
+                    $avatar = $channel && !empty($channel->avatar) ? $channel->avatar : '';
+                    if ($avatar !== '' && strpos($avatar, 'http') !== 0) $avatar = $site_url . '/' . ltrim($avatar, '/');
+                    $initial = $channel && !empty($channel->username) ? strtoupper(substr($channel->username, 0, 1)) : '?';
+                ?>
+                <a href="<?php echo _e($link); ?>" class="nia-video-card">
+                    <div class="nia-video-thumb-wrap">
+                        <img class="nia-video-thumb" src="<?php echo _e($thumb ?: ''); ?>" alt="" loading="lazy" onerror="this.style.display='none'">
+                        <?php if ($duration !== '') { ?><span class="nia-video-duration"><?php echo _e($duration); ?></span><?php } ?>
+                    </div>
+                    <div class="nia-video-info">
+                        <?php if ($avatar) { ?><img class="nia-video-avatar" src="<?php echo _e($avatar); ?>" alt=""><?php } else { ?><span class="nia-video-avatar-initial"><?php echo _e($initial); ?></span><?php } ?>
+                        <div class="nia-video-meta">
+                            <div class="nia-video-title"><?php echo _e($item->title ?? ''); ?></div>
+                            <div class="nia-video-channel-stats"><?php echo _e($chanName); ?><?php if ($chanName !== '' && $viewsStr !== '') { ?> · <?php } ?><?php echo _e($viewsStr); ?><?php if ($timeAgo !== '') { ?> · <?php echo _e($timeAgo); } ?></div>
+                        </div>
+                    </div>
+                </a>
+                <?php } ?>
+            </div>
+            <?php if ($has_more_music && $music_page === 1) { ?>
+            <div class="nia-loadmore-wrap text-center py-3">
+                <button type="button" class="btn btn-outline-primary nia-loadmore-btn d-inline-flex align-items-center gap-2" data-loadmore-type="music" data-loadmore-section="<?php echo _e($route_section); ?>" data-loadmore-limit="<?php echo $music_per; ?>" data-loadmore-offset="<?php echo $music_per; ?>" data-loadmore-container="#nia-music-grid" aria-label="Load more music">
+                    <span class="material-icons" style="font-size:1.2rem;">expand_more</span>
+                    <span class="nia-loadmore-text">Load more</span>
+                    <span class="nia-loadmore-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+            <?php }
+            if ($music_total_pages > 1 && function_exists('nia_pagination')) nia_pagination($music_page, $music_total_pages, $music_base_url, 'page', 2);
+            ?>
+        </section>
+        <?php } ?>
+
+        <?php
         $has_any = false;
         foreach ($boxes as $box) {
             $d = nia_music_box_items($box);

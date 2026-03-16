@@ -224,3 +224,53 @@ function nia_yt_meta_render($item, $context = 'cards') {
     $out .= '</div>';
     return $out;
 }
+
+/**
+ * Render Bootstrap 5 pagination with icons. Responsive: fewer numbers on small screens.
+ * @param int    $current_page  Current page (1-based)
+ * @param int    $total_pages   Total pages
+ * @param string $base_url      Base URL (e.g. url('videos') or url('videos/featured'))
+ * @param string $query_param   Query param for page (default 'page')
+ * @param int    $max_visible   Max page numbers to show around current (default 3)
+ */
+function nia_pagination($current_page, $total_pages, $base_url, $query_param = 'page', $max_visible = 3) {
+    if ($total_pages <= 1) return;
+    $current_page = max(1, min($current_page, $total_pages));
+    $sep = strpos($base_url, '?') !== false ? '&' : '?';
+    $href = function($p) use ($base_url, $sep, $query_param) {
+        return $base_url . $sep . $query_param . '=' . $p;
+    };
+    $aria = function($p) { return 'Page ' . $p; };
+    echo '<nav class="nia-pagination-wrap mt-4 mb-3" aria-label="Pagination">';
+    echo '<ul class="pagination pagination-lg justify-content-center flex-wrap mb-0">';
+
+    echo '<li class="page-item' . ($current_page <= 1 ? ' disabled' : '') . '">';
+    echo '<a class="page-link d-inline-flex align-items-center gap-1" href="' . ($current_page > 1 ? _e($href(1)) : '#') . '" aria-label="First"' . ($current_page <= 1 ? ' tabindex="-1"' : '') . '><span class="material-icons" style="font-size:1.2rem;">first_page</span><span class="d-none d-sm-inline ms-1">First</span></a></li>';
+
+    echo '<li class="page-item' . ($current_page <= 1 ? ' disabled' : '') . '">';
+    echo '<a class="page-link d-inline-flex align-items-center" href="' . ($current_page > 1 ? _e($href($current_page - 1)) : '#') . '" aria-label="Previous"' . ($current_page <= 1 ? ' tabindex="-1"' : '') . '><span class="material-icons" style="font-size:1.2rem;">chevron_left</span></a></li>';
+
+    $from = max(1, $current_page - $max_visible);
+    $to = min($total_pages, $current_page + $max_visible);
+    if ($from > 2) {
+        echo '<li class="page-item"><a class="page-link" href="' . _e($href(1)) . '" aria-label="' . $aria(1) . '">1</a></li>';
+        if ($from > 3) echo '<li class="page-item disabled"><span class="page-link">…</span></li>';
+    }
+    for ($i = $from; $i <= $to; $i++) {
+        $active = $i === $current_page;
+        echo '<li class="page-item' . ($active ? ' active' : '') . '">';
+        echo '<a class="page-link" href="' . ($active ? '#' : _e($href($i))) . '" aria-label="' . $aria($i) . '"' . ($active ? ' aria-current="page"' : '') . '>' . $i . '</a></li>';
+    }
+    if ($to < $total_pages - 1) {
+        if ($to < $total_pages - 2) echo '<li class="page-item disabled"><span class="page-link">…</span></li>';
+        echo '<li class="page-item"><a class="page-link" href="' . _e($href($total_pages)) . '" aria-label="' . $aria($total_pages) . '">' . $total_pages . '</a></li>';
+    }
+
+    echo '<li class="page-item' . ($current_page >= $total_pages ? ' disabled' : '') . '">';
+    echo '<a class="page-link d-inline-flex align-items-center" href="' . ($current_page < $total_pages ? _e($href($current_page + 1)) : '#') . '" aria-label="Next"' . ($current_page >= $total_pages ? ' tabindex="-1"' : '') . '><span class="material-icons" style="font-size:1.2rem;">chevron_right</span></a></li>';
+
+    echo '<li class="page-item' . ($current_page >= $total_pages ? ' disabled' : '') . '">';
+    echo '<a class="page-link d-inline-flex align-items-center gap-1" href="' . ($current_page < $total_pages ? _e($href($total_pages)) : '#') . '" aria-label="Last"' . ($current_page >= $total_pages ? ' tabindex="-1"' : '') . '><span class="d-none d-sm-inline me-1">Last</span><span class="material-icons" style="font-size:1.2rem;">last_page</span></a></li>';
+
+    echo '</ul></nav>';
+}

@@ -10,7 +10,7 @@ if (is_logged()) {
 $error = '';
 $page_title = 'Create account';
 $redirect = isset($_GET['redirect']) ? trim($_GET['redirect']) : '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'register') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'register') {
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $name = isset($_POST['name']) ? trim($_POST['name']) : '';
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';

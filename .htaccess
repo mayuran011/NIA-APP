@@ -1,7 +1,8 @@
-# Nia App – clean URLs
+# Nia App – clean URLs (root domain, e.g. Hostinger)
+# For local subdir (e.g. /PHPVIBENEWWEBS/) set: RewriteBase /PHPVIBENEWWEBS/
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /PHPVIBENEWWEBS/
+    RewriteBase /
 
     # Existing files and directories
     RewriteCond %{REQUEST_FILENAME} !-f

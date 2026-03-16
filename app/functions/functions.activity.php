@@ -68,3 +68,28 @@ function get_activity($args = []) {
     }
     return $results;
 }
+
+/**
+ * Total activity count for same filters as get_activity (for pagination).
+ * @param array $args user_id, action
+ * @return int
+ */
+function get_activity_count($args = []) {
+    global $db;
+    $pre = $db->prefix();
+    $user_id = isset($args['user_id']) ? (int) $args['user_id'] : null;
+    $action = isset($args['action']) ? trim($args['action']) : null;
+
+    $where = '1=1';
+    $params = [];
+    if ($user_id > 0) {
+        $where .= ' AND a.user_id = ?';
+        $params[] = $user_id;
+    }
+    if ($action !== null && $action !== '') {
+        $where .= ' AND a.action = ?';
+        $params[] = $action;
+    }
+    $row = $db->fetch("SELECT COUNT(*) AS c FROM {$pre}activity a WHERE {$where}", $params);
+    return isset($row->c) ? (int) $row->c : 0;
+}

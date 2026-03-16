@@ -28,14 +28,18 @@ if ($db_ok) {
     }
 }
 
-// Media Engine Diagnostics
+// Media Engine Diagnostics (exec may be disabled on shared hosts)
 function _health_test_bin($cmd) {
     if (!$cmd) return ['ok' => false, 'out' => 'No command defined'];
+    if (!function_exists('exec')) {
+        return ['ok' => false, 'out' => 'exec() is disabled on this server; cannot verify binary.'];
+    }
     $out = [];
     $ret = -1;
     @exec($cmd . ' --version 2>&1', $out, $ret);
     if ($ret === 0 && !empty($out)) return ['ok' => true, 'out' => $out[0]];
-    // Try simple version check
+    $out = [];
+    $ret = -1;
     @exec($cmd . ' -version 2>&1', $out, $ret);
     if ($ret === 0 && !empty($out)) return ['ok' => true, 'out' => $out[0]];
     return ['ok' => false, 'out' => 'Command not found or execution failed.'];
@@ -144,7 +148,7 @@ $server_software = $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
                    <?php else: ?>
                         <span class="material-icons text-muted mb-2" style="font-size: 2.5rem;">block</span>
                         <h6 class="fw-bold mb-1">Not Found</h6>
-                        <span class="small text-danger">Check path in settings</span>
+                        <span class="small text-danger" title="<?php echo _e($check_yt['out']); ?>"><?php echo _e(strpos($check_yt['out'], 'exec()') !== false ? 'exec disabled on server' : 'Check path in settings'); ?></span>
                    <?php endif; ?>
                 </div>
             </div>
@@ -169,7 +173,7 @@ $server_software = $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
                    <?php else: ?>
                         <span class="material-icons text-muted mb-2" style="font-size: 2.5rem;">error_outline</span>
                         <h6 class="fw-bold mb-1">Missing</h6>
-                        <span class="small text-danger">Manual install needed</span>
+                        <span class="small text-danger" title="<?php echo _e($check_ff['out']); ?>"><?php echo _e(strpos($check_ff['out'], 'exec()') !== false ? 'exec disabled on server' : 'Manual install needed'); ?></span>
                    <?php endif; ?>
                 </div>
             </div>

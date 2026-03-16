@@ -11,7 +11,12 @@ if ($current_path === '') $current_path = '/';
 
 $subs = [];
 if (function_exists('get_channels')) {
-    $subs = array_slice(get_channels('video', 0), 0, 8);
+    try {
+        $chans = get_channels('video', 0);
+        $subs = is_array($chans) ? array_slice($chans, 0, 8) : [];
+    } catch (Throwable $e) {
+        $subs = [];
+    }
 }
 ?>
 <aside class="nia-sidebar" id="niaSidebar">

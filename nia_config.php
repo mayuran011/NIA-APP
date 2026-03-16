@@ -27,19 +27,19 @@ if (file_exists(ABSPATH . 'hold.json')) {
 }
 
 // -----------------------------------------------------------------------------
-// Database (MySQL) – localhost, database: test, username: root (no password = '')
+// Database (MySQL) – Remote MySQL Access
 // -----------------------------------------------------------------------------
-define('DB_HOST',     'localhost');
-define('DB_NAME',     'test');
-define('DB_USER',     'root');
-define('DB_PASS',     '');
+define('DB_HOST',     'vps3323197.trouble-free.net');
+define('DB_NAME',     'mayu_NIAAPP');
+define('DB_USER',     'mayu_NIAAPP');
+define('DB_PASS',     'uSY3VUPJ8x');
 define('DB_CHARSET',  'utf8mb4');
 define('DB_PREFIX',   'nia_');
 
 // -----------------------------------------------------------------------------
 // Site & paths
 // -----------------------------------------------------------------------------
-define('SITE_URL',    'http://localhost/PHPVIBENEWWEBS');
+define('SITE_URL',    'https://vdo.nia.yt');
 define('ADMINCP',     'moderator');           // Admin base path, e.g. /moderator/
 define('MEDIA_FOLDER', ABSPATH . 'media');
 define('TMP_FOLDER',   ABSPATH . 'tmp');

@@ -60,11 +60,16 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
 
         if ($tab === 'videos' || $tab === 'music' || $tab === 'likes') {
             $items = [];
+            $profile_per = 24;
             if ($tab === 'videos') {
-                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'video' AND (private = 0 OR user_id = ?) ORDER BY created_at DESC LIMIT 24", [$profile_user->id, current_user_id()]);
+                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'video' AND (private = 0 OR user_id = ?) ORDER BY created_at DESC LIMIT " . ($profile_per + 1), [$profile_user->id, current_user_id()]);
+                $has_more_profile = count($rows) > $profile_per;
+                if ($has_more_profile) $rows = array_slice($rows, 0, $profile_per);
                 foreach ($rows as $r) { $items[] = is_array($r) ? (object) $r : $r; }
             } elseif ($tab === 'music') {
-                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'music' ORDER BY created_at DESC LIMIT 24", [$profile_user->id]);
+                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'music' ORDER BY created_at DESC LIMIT " . ($profile_per + 1), [$profile_user->id]);
+                $has_more_profile = count($rows) > $profile_per;
+                if ($has_more_profile) $rows = array_slice($rows, 0, $profile_per);
                 foreach ($rows as $r) { $items[] = is_array($r) ? (object) $r : $r; }
             } else {
                 $pl = get_playlist(PLAYLIST_LIKES, $profile_user->id);
@@ -77,7 +82,9 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
                 }
             }
             if (!empty($items)) {
-                echo '<div class="nia-video-grid">';
+                $grid_id = 'nia-profile-' . $tab . '-grid';
+                $loadmore_type = $tab === 'music' ? 'profile_music' : 'profile_videos';
+                echo '<div id="' . _e($grid_id) . '" class="nia-video-grid">';
                 foreach ($items as $v) {
                     $link = function_exists('media_play_url') ? media_play_url($v->id, $v->type ?? 'video', $v->title ?? '') : watch_url($v->id);
                     $thumb = !empty($v->thumb) ? $v->thumb : '';
@@ -103,6 +110,9 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
                     </a>
                 <?php }
                 echo '</div>';
+                if (($tab === 'videos' || $tab === 'music') && !empty($has_more_profile) && isset($has_more_profile)) {
+                    echo '<div class="nia-loadmore-wrap text-center py-4"><button type="button" class="btn btn-outline-primary nia-loadmore-btn d-inline-flex align-items-center gap-2" data-loadmore-type="' . _e($loadmore_type) . '" data-loadmore-user-id="' . (int)$profile_user->id . '" data-loadmore-limit="24" data-loadmore-offset="24" data-loadmore-container="#' . _e($grid_id) . '" aria-label="Load more"><span class="material-icons" style="font-size:1.2rem;">expand_more</span><span class="nia-loadmore-text">Load more</span><span class="nia-loadmore-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span></button></div>';
+                }
             } else {
                 echo '<p class="text-muted">' . ($tab === 'videos' ? 'No videos.' : ($tab === 'music' ? 'No music.' : 'No likes yet.')) . '</p>';
             }

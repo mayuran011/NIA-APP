@@ -4,6 +4,7 @@
  */
 if (!defined('in_nia_app')) exit;
 $nia_section = $GLOBALS['nia_route_section'] ?? '';
+$modview = 'home';
 $page_title = get_option('sitename', 'Home');
 $boxes = get_option('homepage_boxes', '[]');
 $boxes = is_string($boxes) ? json_decode($boxes, true) : $boxes;

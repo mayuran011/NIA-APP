@@ -1,21 +1,25 @@
 </div><!-- .nia-content -->
 </div><!-- .nia-layout -->
 
-<nav class="nia-bottom-nav d-lg-none d-flex">
+<nav class="nia-bottom-nav d-lg-none d-flex" role="navigation" aria-label="Mobile bottom menu">
     <a href="<?php echo url(); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && $modview === 'home') ? ' active' : ''; ?>">
-        <span class="material-icons">home</span>
+        <span class="material-icons" aria-hidden="true">home</span>
         <span class="nia-bottom-nav-label">Home</span>
     </a>
-    <a href="<?php echo url('videos'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && in_array($modview, ['video', 'videos', 'watch'], true)) ? ' active' : ''; ?>">
-        <span class="material-icons">smart_display</span>
+    <a href="<?php echo url('show'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && $modview === 'show') ? ' active' : ''; ?>">
+        <span class="material-icons" aria-hidden="true">explore</span>
+        <span class="nia-bottom-nav-label">Explore</span>
+    </a>
+    <a href="<?php echo url('videos/browse'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && in_array($modview, ['video', 'videos', 'watch'], true)) ? ' active' : ''; ?>">
+        <span class="material-icons" aria-hidden="true">smart_display</span>
         <span class="nia-bottom-nav-label">Videos</span>
     </a>
-    <a href="<?php echo is_logged() ? url('me') : url('login'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && $modview === 'me') ? ' active' : ''; ?>">
-        <span class="material-icons">video_library</span>
-        <span class="nia-bottom-nav-label">Library</span>
+    <a href="<?php echo url('music/browse'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && $modview === 'music') ? ' active' : ''; ?>">
+        <span class="material-icons" aria-hidden="true">music_note</span>
+        <span class="nia-bottom-nav-label">Music</span>
     </a>
-    <a href="<?php echo is_logged() ? url('me/manage') : url('login'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && $modview === 'me.manage') ? ' active' : ''; ?>">
-        <span class="material-icons">person</span>
+    <a href="<?php echo is_logged() ? url('me') : url('login'); ?>" class="nia-bottom-nav-item<?php echo (isset($modview) && in_array($modview, ['me', 'me.manage'], true)) ? ' active' : ''; ?>">
+        <span class="material-icons" aria-hidden="true">person</span>
         <span class="nia-bottom-nav-label">You</span>
     </a>
 </nav>
@@ -111,6 +115,55 @@
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* Load more – runs on any .nia-loadmore-btn (data-loadmore-type, data-loadmore-container, data-loadmore-section, data-loadmore-limit, data-loadmore-offset; profile: data-loadmore-user-id). */
+(function(){
+    var baseUrl = '<?php echo _e(url('app/ajax/loadmore.php')); ?>';
+    function initLoadMore() {
+        document.querySelectorAll('.nia-loadmore-btn').forEach(function(btn){
+            if (btn.dataset.loadmoreBound) return;
+            btn.dataset.loadmoreBound = '1';
+            btn.addEventListener('click', function(){
+                var type = this.getAttribute('data-loadmore-type');
+                var section = this.getAttribute('data-loadmore-section') || '';
+                var limit = this.getAttribute('data-loadmore-limit') || '24';
+                var offset = this.getAttribute('data-loadmore-offset') || '0';
+                var userId = this.getAttribute('data-loadmore-user-id') || '';
+                var containerSel = this.getAttribute('data-loadmore-container');
+                if (!type || !containerSel) return;
+                var container = document.querySelector(containerSel);
+                if (!container) return;
+                var wrap = this.closest('.nia-loadmore-wrap');
+                var textEl = this.querySelector('.nia-loadmore-text');
+                var spinner = this.querySelector('.nia-loadmore-spinner');
+                this.disabled = true;
+                if (textEl) textEl.textContent = 'Loading…';
+                if (spinner) spinner.classList.remove('d-none');
+                var url = baseUrl + '?type=' + encodeURIComponent(type) + '&offset=' + encodeURIComponent(offset) + '&limit=' + encodeURIComponent(limit);
+                if (section) url += '&section=' + encodeURIComponent(section);
+                if (userId) url += '&user_id=' + encodeURIComponent(userId);
+                fetch(url).then(function(r){ return r.json(); }).then(function(d){
+                    if (d.ok && d.html) {
+                        container.insertAdjacentHTML('beforeend', d.html);
+                        try { document.dispatchEvent(new CustomEvent('nia-loadmore-appended', { detail: { container: container } })); } catch (e) {}
+                    }
+                    if (d.next_offset !== undefined) btn.setAttribute('data-loadmore-offset', d.next_offset);
+                    if (!d.has_more && wrap) wrap.style.display = 'none';
+                    btn.disabled = false;
+                    if (textEl) textEl.textContent = 'Load more';
+                    if (spinner) spinner.classList.add('d-none');
+                }).catch(function(){
+                    btn.disabled = false;
+                    if (textEl) textEl.textContent = 'Load more';
+                    if (spinner) spinner.classList.add('d-none');
+                });
+            });
+        });
+    }
+    initLoadMore();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLoadMore);
+})();
+</script>
+<script>
 (function() {
     var sidebar = document.getElementById('niaSidebar');
     var backdrop = document.getElementById('niaSidebarBackdrop');
@@ -118,20 +171,19 @@
     var icon = document.getElementById('niaSidebarToggleIcon');
     var layout = document.querySelector('.nia-layout');
     var storageKey = 'niaSidebarCollapsed';
+    var forceSidebarOpen = <?php echo is_logged() ? 'true' : 'false'; ?>;
 
     function isMobile() { return window.matchMedia('(max-width: 991.98px)').matches; }
 
     function openSidebar() {
-        sidebar.classList.add('open');
-        backdrop.classList.add('show');
-        backdrop.setAttribute('aria-hidden', 'false');
+        if (sidebar) sidebar.classList.add('open');
+        if (backdrop) { backdrop.classList.add('show'); backdrop.setAttribute('aria-hidden', 'false'); }
         if (icon) icon.textContent = 'close';
         if (toggle) toggle.setAttribute('aria-label', 'Close menu');
     }
     function closeSidebar() {
-        sidebar.classList.remove('open');
-        backdrop.classList.remove('show');
-        backdrop.setAttribute('aria-hidden', 'true');
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) { backdrop.classList.remove('show'); backdrop.setAttribute('aria-hidden', 'true'); }
         if (icon) icon.textContent = 'menu';
         if (toggle) toggle.setAttribute('aria-label', 'Open menu');
     }
@@ -169,23 +221,26 @@
 
         if (!isMobile()) {
             var saved = '';
-            try { saved = localStorage.getItem(storageKey); } catch (e) {}
-            if (saved === '1') {
+            if (!forceSidebarOpen) { try { saved = localStorage.getItem(storageKey); } catch (e) {} }
+            if (saved === '1' && !forceSidebarOpen) {
                 layout.classList.add('nia-sidebar-collapsed');
                 if (icon) icon.textContent = 'menu';
                 if (toggle) toggle.setAttribute('aria-label', 'Open menu');
             } else {
+                layout.classList.remove('nia-sidebar-collapsed');
                 if (icon) icon.textContent = 'close';
                 if (toggle) toggle.setAttribute('aria-label', 'Close menu');
             }
+        } else {
+            /* On mobile, do not auto-open sidebar – it would cover content with the backdrop. User can tap hamburger to open menu. */
         }
 
         window.addEventListener('resize', function() {
             if (!isMobile()) {
                 closeSidebar();
                 var saved = '';
-                try { saved = localStorage.getItem(storageKey); } catch (e) {}
-                if (saved === '1') {
+                if (!forceSidebarOpen) { try { saved = localStorage.getItem(storageKey); } catch (e) {} }
+                if (saved === '1' && !forceSidebarOpen) {
                     layout.classList.add('nia-sidebar-collapsed');
                     if (icon) icon.textContent = 'menu';
                 } else {
@@ -194,7 +249,7 @@
                 }
             } else {
                 layout.classList.remove('nia-sidebar-collapsed');
-                closeSidebar();
+                if (!forceSidebarOpen) closeSidebar();
             }
         });
     }

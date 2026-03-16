@@ -7,16 +7,21 @@ if (!defined('in_nia_app')) exit;
 
 $page_title = 'Activity';
 
-// --- Filtering ---
+// --- Filtering & pagination ---
 $filter = $_GET['type'] ?? 'all';
-$offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 $limit = 20;
+$count_args = $filter !== 'all' ? ['action' => $filter] : [];
+$total_activities = function_exists('get_activity_count') ? get_activity_count($count_args) : 0;
+$total_pages = $limit > 0 ? max(1, (int) ceil($total_activities / $limit)) : 1;
+$page = isset($_GET['page']) ? max(1, min($total_pages, (int) $_GET['page'])) : 1;
+$offset = ($page - 1) * $limit;
 $args = ['limit' => $limit, 'offset' => $offset];
 if ($filter !== 'all') {
     $args['action'] = $filter;
 }
 $activities = get_activity($args);
-$next_offset = $offset + $limit;
+$has_more_activity = count($activities) >= $limit && $page < $total_pages;
+$activity_base_url = $filter === 'all' ? url('activity') : url('activity?type=' . $filter);
 
 require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR . 'tpl.header.php';
 ?>
@@ -143,15 +148,19 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
             <?php
         }
         
-        if (count($activities) >= $limit) {
-            $load_more_url = url('activity?type=' . $filter . '&offset=' . $next_offset);
+        <?php if ($has_more_activity && $page === 1) {
+            $load_more_url = $activity_base_url . (strpos($activity_base_url, '?') !== false ? '&' : '?') . 'page=2';
             ?>
             <div class="text-center mt-4">
-                <a href="<?php echo $load_more_url; ?>" class="btn btn-outline-secondary btn-lg px-5 rounded-pill shadow-sm">
-                    <span class="material-icons align-middle me-1">expand_more</span> Load More
+                <a href="<?php echo _e($load_more_url); ?>" class="btn btn-outline-primary btn-lg px-4 rounded-pill shadow-sm d-inline-flex align-items-center gap-2">
+                    <span class="material-icons" style="font-size:1.2rem;">expand_more</span> Load more
                 </a>
             </div>
-            <?php
+        <?php }
+        if ($total_pages > 1 && function_exists('nia_pagination')) {
+            echo '<div class="mt-4">';
+            nia_pagination($page, $total_pages, $activity_base_url, 'page', 2);
+            echo '</div>';
         }
     } else {
         ?>

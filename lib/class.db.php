@@ -15,6 +15,10 @@ class NiaDB {
     private static $instance;
 
     private function __construct() {
+        // #region agent log
+        $logPath = defined('ABSPATH') ? (ABSPATH . 'debug-785c75.log') : (__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'debug-785c75.log');
+        @file_put_contents($logPath, json_encode(['sessionId'=>'785c75','id'=>'log_'.uniqid(),'timestamp'=>round(microtime(true)*1000),'location'=>'class.db.php:__construct','message'=>'PDO connection about to be created','data'=>['pid'=>getmypid(),'instanceCount'=>'(singleton)'],'hypothesisId'=>'A,C'])."\n", LOCK_EX | FILE_APPEND);
+        // #endregion
         $dsn = sprintf(
             'mysql:host=%s;dbname=%s;charset=%s',
             DB_HOST,
@@ -29,6 +33,11 @@ class NiaDB {
     }
 
     public static function instance() {
+        // #region agent log
+        $logPath = defined('ABSPATH') ? (ABSPATH . 'debug-785c75.log') : (__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'debug-785c75.log');
+        $creating = self::$instance === null;
+        @file_put_contents($logPath, json_encode(['sessionId'=>'785c75','id'=>'log_'.uniqid(),'timestamp'=>round(microtime(true)*1000),'location'=>'class.db.php:instance','message'=>'NiaDB::instance() called','data'=>['creatingNew'=>$creating,'pid'=>getmypid()],'hypothesisId'=>'B,C'])."\n", LOCK_EX | FILE_APPEND);
+        // #endregion
         if (self::$instance === null) {
             self::$instance = new self();
         }

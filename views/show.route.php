@@ -9,6 +9,7 @@ $type = isset($_GET['type']) ? trim($_GET['type']) : 'all';
 if (!in_array($type, ['all', 'videos', 'music', 'pictures', 'channels', 'playlists'], true)) {
     $type = 'all';
 }
+$modview = 'show';
 $page_title = $q !== '' ? 'Search: ' . _e($q) : 'Search';
 $results = $q !== '' ? search_global($q, $type, 24, 0) : ['videos' => [], 'images' => [], 'channels' => [], 'playlists' => []];
 $site_url = rtrim(SITE_URL, '/');

@@ -12,6 +12,7 @@ $groups = [
         ['section' => 'videos', 'label' => 'Videos', 'icon' => 'videocam', 'url' => admin_url('videos')],
         ['section' => 'music', 'label' => 'Music', 'icon' => 'music_note', 'url' => admin_url('music')],
         ['section' => 'images', 'label' => 'Images', 'icon' => 'image', 'url' => admin_url('images')],
+        ['section' => 'broken-videos', 'label' => 'Unavailable / Broken videos', 'icon' => 'warning', 'url' => admin_url('broken-videos')],
         ['section' => 'channels', 'label' => 'Channels', 'icon' => 'folder', 'url' => admin_url('channels')],
         ['section' => 'playlists', 'label' => 'Playlists', 'icon' => 'playlist_play', 'url' => admin_url('playlists')],
     ]],

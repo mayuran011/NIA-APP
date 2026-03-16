@@ -14,7 +14,7 @@ if (is_logged()) {
 $error = isset($_GET['error']) ? trim($_GET['error']) : '';
 $page_title = 'Sign in';
 $redirect = isset($_GET['redirect']) ? trim($_GET['redirect']) : '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $pass = isset($_POST['password']) ? $_POST['password'] : '';
     $res = auth_login($email, $pass);

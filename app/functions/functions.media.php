@@ -76,6 +76,35 @@ function get_videos($args = []) {
 }
 
 /**
+ * Total count for same filters as get_videos (for pagination).
+ * @return int
+ */
+function get_videos_count($args = []) {
+    global $db;
+    $pre = $db->prefix();
+    $type = isset($args['type']) ? $args['type'] : 'video';
+    $category_id = isset($args['category_id']) ? (int) $args['category_id'] : null;
+    $section = isset($args['section']) ? $args['section'] : 'browse';
+    $uid = current_user_id();
+
+    $where = ["v.type IN ('video', 'music')", "(v.private = 0 OR v.user_id = ?)"];
+    $params = [$uid];
+    if ($type === 'video' || $type === 'music') {
+        $where[] = "v.type = ?";
+        $params[] = $type;
+    }
+    if ($category_id !== null && $category_id > 0) {
+        $where[] = "v.category_id = ?";
+        $params[] = $category_id;
+    }
+    if ($section === 'featured') {
+        $where[] = "v.featured = 1";
+    }
+    $row = $db->fetch("SELECT COUNT(*) AS c FROM {$pre}videos v WHERE " . implode(' AND ', $where), $params);
+    return isset($row->c) ? (int) $row->c : 0;
+}
+
+/**
  * Related videos for watch page: same category or channel, exclude current. Order by views then created_at.
  * @return array
  */

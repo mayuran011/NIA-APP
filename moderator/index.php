@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin (moderator) – base path from ADMINCP (e.g. /moderator/).
- * Sections: dashboard, videos, music, images, channels, playlists, users, comments, reports,
+ * Sections: dashboard, videos, music, images, broken-videos, channels, playlists, users, comments, reports,
  * blog, blogcat, staticpages, homepage, seo, settings, languages, plugins, cache,
  * health, errorlog, ads, youtube, download, vine, activity.
  */

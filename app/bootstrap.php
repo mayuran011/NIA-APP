@@ -25,7 +25,7 @@ if (is_dir($tmp_base) && is_writable($tmp_base)) {
     }
 }
 error_reporting(E_ALL);
-ini_set('display_errors', defined('WP_DEBUG') && WP_DEBUG ? '1' : '0');
+ini_set('display_errors', (defined('WP_DEBUG') && constant('WP_DEBUG')) ? '1' : '0');
 
 // Session (after headers ready; start only when needed)
 if (session_status() === PHP_SESSION_NONE) {

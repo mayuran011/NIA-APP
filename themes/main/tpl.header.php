@@ -20,7 +20,10 @@ $nia_body_class = ($nia_dark === '1') ? 'nia-body' : 'nia-body nia-light';
 <html lang="<?php echo function_exists('current_lang') ? _e(current_lang()) : 'en'; ?>"<?php echo (function_exists('is_rtl') && is_rtl()) ? ' dir="rtl"' : ''; ?> class="<?php echo $nia_dark === '1' ? '' : 'nia-light'; ?>" <?php echo $nia_dark === '1' ? 'data-bs-theme="dark"' : ''; ?>>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title><?php echo _e($title); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?php 
@@ -90,9 +93,8 @@ $nia_body_class = ($nia_dark === '1') ? 'nia-body' : 'nia-body nia-light';
     }
     ?>
     <meta name="theme-color" content="<?php echo $nia_dark === '1' ? _e(get_option('theme_color', '#ff0000')) : '#f4f4f5'; ?>">
-    <meta name="mobile-web-app-capable" content="yes">
 </head>
-<body class="<?php echo _e($nia_body_class); ?>"<?php
+<body class="<?php echo _e($nia_body_class); ?><?php echo is_logged() ? ' nia-logged-in' : ''; ?>"<?php
 if (!empty($nia_current_media_id)) {
     echo ' data-nia-media-id="' . (int) $nia_current_media_id . '" data-nia-media-type="' . _e($nia_current_media_type ?? 'video') . '"';
 }
@@ -155,7 +157,7 @@ $logo_img = get_option('logo_url');
         <div class="dropdown d-inline-block">
             <button type="button" class="nia-header-btn position-relative border-0 bg-transparent p-0" id="nia-notifications-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                 <span class="material-icons">notifications_none</span>
-                <?php $unread = count_unread_notifications(); if ($unread > 0): ?>
+                <?php try { $unread = count_unread_notifications(); } catch (Throwable $e) { $unread = 0; } if ($unread > 0): ?>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger nia-notif-badge" style="font-size: 0.6rem; padding: 0.25em 0.4em; z-index:1;"><?php echo $unread > 9 ? '9+' : $unread; ?></span>
                 <?php endif; ?>
             </button>
@@ -181,7 +183,7 @@ $logo_img = get_option('logo_url');
             </button>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
                 <li class="px-3 py-2 border-bottom border-secondary border-opacity-25 mb-1">
-                    <div class="fw-bold text-truncate"><?php echo _e($cu->name ?? $cu->username); ?></div>
+                    <div class="fw-bold text-truncate"><?php echo _e($cu ? ($cu->name ?? $cu->username ?? '') : ''); ?></div>
                     <?php if (has_premium()): ?>
                         <div class="badge bg-primary rounded-pill small mt-1" style="font-size: 0.65rem; letter-spacing: 0.5px;"><span class="material-icons align-middle me-1" style="font-size: 0.8rem;">workspace_premium</span>PREMIUM</div>
                     <?php endif; ?>
@@ -204,8 +206,15 @@ $logo_img = get_option('logo_url');
 <div class="nia-layout d-flex mt-3">
 <?php
 $sidebar_file = ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR . 'sidebar.php';
-if (is_file($sidebar_file)) {
-    include $sidebar_file;
+try {
+    if (is_file($sidebar_file)) {
+        include $sidebar_file;
+    } else {
+        echo '<aside class="nia-sidebar" id="niaSidebar"><nav class="nia-sidebar-nav"><a class="nia-sidebar-item" href="' . _e(url()) . '"><span class="material-icons">home</span><span>Home</span></a><a class="nia-sidebar-item" href="' . _e(url('videos/browse')) . '"><span class="material-icons">videocam</span><span>Videos</span></a><a class="nia-sidebar-item" href="' . _e(url('music/browse')) . '"><span class="material-icons">music_note</span><span>Music</span></a></nav></aside>';
+    }
+} catch (Throwable $e) {
+    if (function_exists('error_log')) { error_log('Sidebar error: ' . $e->getMessage()); }
+    echo '<aside class="nia-sidebar" id="niaSidebar"><nav class="nia-sidebar-nav"><a class="nia-sidebar-item" href="' . _e(url()) . '"><span class="material-icons">home</span><span>Home</span></a><a class="nia-sidebar-item" href="' . _e(url('videos/browse')) . '"><span class="material-icons">videocam</span><span>Videos</span></a><a class="nia-sidebar-item" href="' . _e(url('music/browse')) . '"><span class="material-icons">music_note</span><span>Music</span></a><a class="nia-sidebar-item" href="' . _e(url('dashboard')) . '"><span class="material-icons">video_library</span><span>Dashboard</span></a></nav></aside>';
 }
 ?>
 <div class="nia-content flex-grow-1 overflow-auto">

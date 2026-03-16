@@ -5,7 +5,8 @@ if (!is_logged()) {
 }
 $nia_section = $GLOBALS['nia_route_section'] ?? '';
 $section = $nia_section !== '' ? $nia_section : 'library';
-$page_title = 'Library';
+$modview = ($section === 'manage' || strpos($section, 'manage') !== false) ? 'me.manage' : 'me';
+$page_title = $section === 'history' ? 'History' : ($section === 'later' ? 'Watch later' : ($section === 'likes' ? 'Likes' : 'Library'));
 $uid = current_user_id();
 global $db;
 $pre = $db->prefix();
@@ -312,15 +313,82 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
             ensure_system_playlists($uid);
             $key = $section === 'later' ? PLAYLIST_LATER : ($section === 'history' ? PLAYLIST_HISTORY : PLAYLIST_LIKES);
             $pl = get_playlist($key, $uid);
+            $site_url = rtrim(SITE_URL, '/');
+            $section_title = $section === 'later' ? 'Watch later' : ($section === 'history' ? 'History' : 'Likes');
+            $section_icon = $section === 'later' ? 'schedule' : ($section === 'history' ? 'history' : 'thumb_up');
+            $section_color = $section === 'later' ? 'primary' : ($section === 'history' ? 'info' : 'danger');
             if ($pl) {
-                $items = get_playlist_items($pl->id, 'video', 50);
-                if ($items) {
+                $items = get_playlist_items($pl->id, 'video', 80);
+                $items = is_array($items) ? $items : [];
+                if (!empty($items)) {
+                    ?>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <h2 class="h5 mb-0 fw-bold d-flex align-items-center gap-2">
+                            <span class="material-icons text-<?php echo $section_color; ?>"><?php echo $section_icon; ?></span>
+                            <?php echo _e($section_title); ?>
+                        </h2>
+                        <span class="text-muted small d-inline-flex align-items-center gap-1">
+                            <span class="material-icons" style="font-size:1rem;">list</span>
+                            <?php echo count($items); ?> item<?php echo count($items) !== 1 ? 's' : ''; ?>
+                        </span>
+                    </div>
+                    <div class="row g-2 g-md-3 nia-me-grid">
+                    <?php
                     foreach ($items as $pd) {
-                        $v = get_video($pd->media_id);
-                        if ($v) echo '<div class="mb-2"><a href="' . (function_exists('media_play_url') ? media_play_url($v->id, $v->type ?? 'video', $v->title ?? '') : watch_url($v->id)) . '">' . _e($v->title) . '</a></div>';
-                    }
-                } else echo '<p class="text-muted">Nothing here yet.</p>';
-            } else echo '<p class="text-muted">Nothing here yet.</p>';
+                        $pd = is_array($pd) ? (object) $pd : $pd;
+                        $v = get_video($pd->media_id ?? 0);
+                        if (!$v) continue;
+                        $v = is_array($v) ? (object) $v : $v;
+                        $play_url = function_exists('media_play_url') ? media_play_url($v->id, $v->type ?? 'video', $v->title ?? '') : watch_url($v->id);
+                        $thumb = !empty($v->thumb) ? $v->thumb : '';
+                        if ($thumb !== '' && strpos($thumb, 'http') !== 0) $thumb = $site_url . '/' . ltrim($thumb, '/');
+                        $media_type = isset($v->type) && $v->type === 'music' ? 'music' : 'video';
+                        $views_num = (int)($v->views ?? 0);
+                        $added_at = $pd->added_at ?? null;
+                        $added = !empty($added_at) ? strtotime($added_at) : null;
+                        ?>
+                        <div class="col-4 col-sm-3 col-md-2 col-lg-2">
+                            <a href="<?php echo _e($play_url); ?>" class="card bg-dark border-secondary text-decoration-none text-reset h-100 nia-me-card rounded-2 overflow-hidden">
+                                <div class="position-relative" style="aspect-ratio:16/9;">
+                                    <?php if ($thumb) { ?><img src="<?php echo _e($thumb); ?>" class="card-img-top w-100 h-100" alt="" style="object-fit:cover;" loading="lazy" onerror="this.style.display='none'"><?php } else { ?><div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center"><span class="material-icons text-dark"><?php echo $media_type === 'music' ? 'music_note' : 'videocam'; ?></span></div><?php } ?>
+                                    <span class="position-absolute bottom-0 start-0 m-1 badge bg-dark bg-opacity-90" style="font-size:0.65rem;"><?php echo $media_type === 'music' ? 'Music' : 'Video'; ?></span>
+                                    <span class="position-absolute top-0 end-0 m-1 rounded-circle bg-dark bg-opacity-75 d-inline-flex align-items-center justify-content-center" style="width:1.5rem;height:1.5rem;" title="Play"><span class="material-icons text-white" style="font-size:0.9rem;">play_arrow</span></span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="small text-truncate lh-tight" title="<?php echo _e($v->title ?? ''); ?>"><?php echo _e($v->title ?? '—'); ?></div>
+                                    <div class="d-flex align-items-center gap-1 mt-1 text-muted" style="font-size:0.7rem;">
+                                        <span class="material-icons" style="font-size:0.75rem;">visibility</span>
+                                        <?php echo $views_num; ?>
+                                        <?php if ($added) { ?> · <span title="<?php echo date('M j, Y H:i', $added); ?>"><?php echo function_exists('nia_time_ago') ? nia_time_ago($added_at) : date('M j', $added); ?></span><?php } ?>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <?php }
+                    ?>
+                    </div>
+                    <?php
+                } else {
+                    ?>
+                    <div class="card bg-dark border-secondary rounded-3 p-5 text-center text-muted">
+                        <span class="material-icons d-block mb-2 opacity-50" style="font-size:3.5rem;"><?php echo $section_icon; ?></span>
+                        <p class="mb-0">Nothing here yet.</p>
+                        <?php if ($section === 'history') { ?>
+                        <p class="small mt-2 mb-0">Videos and music you play will appear here.</p>
+                        <a href="<?php echo url('videos'); ?>" class="btn btn-outline-primary btn-sm mt-3 d-inline-flex align-items-center gap-1"><span class="material-icons" style="font-size:1rem;">play_circle</span> Browse</a>
+                        <?php } elseif ($section === 'later') { ?>
+                        <p class="small mt-2 mb-0">Add videos from their page with &quot;Watch later&quot;.</p>
+                        <a href="<?php echo url('videos'); ?>" class="btn btn-outline-primary btn-sm mt-3 d-inline-flex align-items-center gap-1"><span class="material-icons" style="font-size:1rem;">add</span> Browse</a>
+                        <?php } else { ?>
+                        <p class="small mt-2 mb-0">Like videos to see them here.</p>
+                        <a href="<?php echo url('videos'); ?>" class="btn btn-outline-primary btn-sm mt-3 d-inline-flex align-items-center gap-1"><span class="material-icons" style="font-size:1rem;">thumb_up</span> Browse</a>
+                        <?php } ?>
+                    </div>
+                    <?php
+                }
+            } else {
+                echo '<p class="text-muted">Nothing here yet.</p>';
+            }
         } elseif ($section === 'library') {
             ensure_system_playlists($uid);
             $pl_later = get_playlist(PLAYLIST_LATER, $uid);
@@ -639,5 +707,15 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
         ?>
     </div>
 </main>
+<style>
+.nia-me-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.nia-me-card:hover { transform: translateY(-2px); box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.2); }
+.nia-me-grid .card-body .text-truncate { max-width: 100%; }
+@media (max-width: 575.98px) {
+    .nia-me-grid .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+    .nia-me-grid .card-body { padding: 0.35rem !important; }
+    .nia-me-grid .card-body .small { font-size: 0.7rem !important; }
+}
+</style>
 <?php
 require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR . 'tpl.footer.php';
