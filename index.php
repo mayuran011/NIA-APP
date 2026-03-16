@@ -24,11 +24,28 @@ if (file_exists($hold_file) || !is_readable($config_file)) {
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 $request_uri = $_SERVER['REQUEST_URI'] ?? '/';
 
-// Config (defines DB, SITE_URL, ADMINCP; loads bootstrap)
-require_once $config_file;
-
-// Route and dispatch
-require_once ABSPATH . 'app' . DIRECTORY_SEPARATOR . 'router.php';
-$path = nia_get_path();
-list($route_name, $section) = nia_match_routes($path);
-nia_dispatch($route_name, $section);
+// Config (defines DB, SITE_URL, ADMINCP; loads bootstrap) – catch so 500 is logged
+try {
+    require_once $config_file;
+    require_once ABSPATH . 'app' . DIRECTORY_SEPARATOR . 'router.php';
+    $path = nia_get_path();
+    list($route_name, $section) = nia_match_routes($path);
+    nia_dispatch($route_name, $section);
+} catch (Throwable $e) {
+    $tmp = ABSPATH . 'tmp';
+    if (!is_dir($tmp)) {
+        @mkdir($tmp, 0755, true);
+    }
+    $log = $tmp . DIRECTORY_SEPARATOR . 'error.log';
+    @file_put_contents($log, date('c') . ' ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n\n", LOCK_EX | FILE_APPEND);
+    if (!headers_sent()) {
+        header('HTTP/1.1 500 Internal Server Error');
+        header('Content-Type: text/html; charset=utf-8');
+    }
+    if (ini_get('display_errors')) {
+        echo '<h1>Error</h1><p>' . htmlspecialchars($e->getMessage()) . '</p><p>' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+    } else {
+        echo '<h1>Site temporarily unavailable</h1><p>Check <code>tmp/error.log</code> on the server or run <code>diagnose_500.php</code> for details.</p>';
+    }
+    exit;
+}
