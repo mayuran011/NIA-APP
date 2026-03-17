@@ -16,6 +16,15 @@ $plugins_dir = ABSPATH . 'app' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEP
 $enabled = get_option('plugins_enabled', '');
 $enabled_list = $enabled !== '' ? array_map('trim', explode(',', $enabled)) : [];
 $available = is_dir($plugins_dir) ? array_filter(scandir($plugins_dir), function ($f) use ($plugins_dir) { return $f !== '.' && $f !== '..' && is_dir($plugins_dir . $f); }) : [];
+sort($available);
+$plugin_descriptions = [
+    'cookiesfree' => 'Cookie consent banner',
+    'videodown' => 'Download video/audio link on watch page',
+    'socialshare' => 'Share buttons (Twitter, Facebook, WhatsApp, Copy link)',
+    'backtotop' => 'Floating back-to-top button',
+    'footertext' => 'Custom footer line (copyright, links)',
+    'customhead' => 'Custom HTML in &lt;head&gt; (meta, scripts)',
+];
 ?>
 
 <div class="row">
@@ -41,20 +50,21 @@ $available = is_dir($plugins_dir) ? array_filter(scandir($plugins_dir), function
 
                     <?php if (!empty($available)) { ?>
                     <hr class="my-4">
-                    <h6 class="fw-bold mb-3">Available Plugins Found Server-Side:</h6>
+                    <h6 class="fw-bold mb-3">Available Plugins</h6>
+                    <p class="text-muted small mb-3">Configure plugin options in <a href="<?php echo _e(admin_url('settings')); ?>">Settings</a> (scroll to Plugin settings).</p>
                     <div class="row g-3 mb-4">
                         <?php foreach($available as $avail) {
                             $is_enabled = in_array(trim($avail), $enabled_list);
+                            $desc = isset($plugin_descriptions[$avail]) ? $plugin_descriptions[$avail] : 'Plugin';
                         ?>
-                        <div class="col-md-4 col-sm-6">
-                            <div class="p-3 border rounded shadow-sm d-flex justify-content-between align-items-center bg-light transition-all">
-                                <div>
-                                    <h6 class="mb-1 text-dark fw-bold"><?php echo _e($avail); ?></h6>
-                                    <small class="text-muted font-monospace">/app/plugins/<?php echo _e($avail); ?></small>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="p-3 border rounded shadow-sm h-100 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0 text-dark fw-bold"><?php echo _e($avail); ?></h6>
+                                    <span class="badge rounded-pill <?php echo $is_enabled ? 'bg-success' : 'bg-secondary'; ?>"><?php echo $is_enabled ? 'On' : 'Off'; ?></span>
                                 </div>
-                                <span class="badge rounded-pill <?php echo $is_enabled ? 'bg-success' : 'bg-secondary'; ?>">
-                                    <?php echo $is_enabled ? 'Active' : 'Inactive'; ?>
-                                </span>
+                                <p class="small text-muted mb-2 flex-grow-1"><?php echo _e($desc); ?></p>
+                                <small class="font-monospace text-muted">/app/plugins/<?php echo _e($avail); ?></small>
                             </div>
                         </div>
                         <?php } ?>

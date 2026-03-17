@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (function_exists('do_action')) {
             do_action('nia_plugin_settings_save', $_POST);
+            do_action('vibe_plugin_settings_save', $_POST);
         }
         redirect(admin_url('settings'));
     }

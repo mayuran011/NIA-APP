@@ -15,6 +15,9 @@
  * - vibe_after_player: action after player output (container_id, video, opts). Use for ad placement in theme/player.
  * - the_navigation: filter nav items array (items).
  * - vibe_plugin_settings: action in admin Settings; plugins output their options card.
+ * - vibe_plugin_settings_save: action on save (receives $_POST).
+ * - vibe_head: action in <head> (custom meta/scripts).
+ * - vibe_after_player: action (container_id, video, opts) after player on watch/listen.
  */
 
 if (!defined('in_nia_app')) exit;

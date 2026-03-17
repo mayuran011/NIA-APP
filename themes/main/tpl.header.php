@@ -93,6 +93,7 @@ $nia_body_class = ($nia_dark === '1') ? 'nia-body' : 'nia-body nia-light';
     }
     ?>
     <meta name="theme-color" content="<?php echo $nia_dark === '1' ? _e(get_option('theme_color', '#ff0000')) : '#f4f4f5'; ?>">
+    <?php if (function_exists('do_action')) { do_action('vibe_head'); } ?>
 </head>
 <body class="<?php echo _e($nia_body_class); ?><?php echo is_logged() ? ' nia-logged-in' : ''; ?>"<?php
 if (!empty($nia_current_media_id)) {
