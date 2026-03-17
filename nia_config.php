@@ -2,18 +2,50 @@
 /**
  * Nia App – Main configuration
  *
- * Groups:
- * - Database: DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_CHARSET, DB_PREFIX
- * - Site & paths: SITE_URL, ADMINCP (admin base path, e.g. moderator), MEDIA_FOLDER, TMP_FOLDER, CACHE_ENABLED (cache toggle)
- * - Security: COOKIEKEY, SECRETSALT (set unique in production)
- * - OAuth: FB_APP_ID, FB_APP_SECRET (Facebook); GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (Google). Leave empty to disable.
- * - Payments: PAYPAL_CLIENT_ID, PAYPAL_SECRET (PayPal). Sandbox via option paypal_sandbox.
- * - Mail/SMTP: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM. Leave empty to disable.
- * - Loader: requires app/bootstrap.php (sets in_nia_app, session, DB, options, helpers, plugins).
+ * Database and SITE_URL are read from the environment or from nia_config.local.php (gitignored).
+ * Do not commit production credentials. Set env vars (DB_HOST, DB_NAME, DB_USER, DB_PASS, SITE_URL)
+ * or use nia_config.local.php for local dev (copy from nia_config.local.sample.php).
+ *
+ * Other groups: Security (COOKIEKEY, SECRETSALT), OAuth, Payments, Mail – set in production.
+ * Loader: requires app/bootstrap.php.
  */
 
 if (!defined('ABSPATH')) {
     define('ABSPATH', rtrim(__DIR__, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+}
+
+// Optional local override (gitignored). Define DB_HOST, DB_NAME, DB_USER, DB_PASS, SITE_URL there.
+$local_config = ABSPATH . 'nia_config.local.php';
+if (is_file($local_config)) {
+    require_once $local_config;
+}
+
+// -----------------------------------------------------------------------------
+// Database – from environment or local config (no credentials in this file)
+// -----------------------------------------------------------------------------
+if (!defined('DB_HOST'))     define('DB_HOST',     getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_NAME'))     define('DB_NAME',     getenv('DB_NAME') ?: 'nia_local');
+if (!defined('DB_USER'))     define('DB_USER',     getenv('DB_USER') ?: 'root');
+if (!defined('DB_PASS'))     define('DB_PASS',     getenv('DB_PASS') ?: '');
+if (!defined('DB_CHARSET'))  define('DB_CHARSET',  getenv('DB_CHARSET') ?: 'utf8mb4');
+if (!defined('DB_PREFIX'))   define('DB_PREFIX',   getenv('DB_PREFIX') ?: 'nia_');
+
+// -----------------------------------------------------------------------------
+// Site & paths – SITE_URL from environment or local config
+// -----------------------------------------------------------------------------
+if (!defined('SITE_URL')) {
+    $site_url = getenv('SITE_URL');
+    if ($site_url === false || $site_url === '') {
+        $site_url = 'http://localhost';
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $site_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+            $base = isset($_SERVER['SCRIPT_NAME']) ? dirname($_SERVER['SCRIPT_NAME']) : '';
+            if ($base !== '' && $base !== '/' && $base !== '\\') {
+                $site_url .= rtrim(str_replace('\\', '/', $base), '/');
+            }
+        }
+    }
+    define('SITE_URL', is_string($site_url) ? rtrim($site_url, '/') : 'http://localhost');
 }
 
 // Setup guard: when hold.json exists, redirect to setup (any entry point)
@@ -26,49 +58,35 @@ if (file_exists(ABSPATH . 'hold.json')) {
     exit;
 }
 
-// -----------------------------------------------------------------------------
-// Database (MySQL) – Remote MySQL Access
-// -----------------------------------------------------------------------------
-define('DB_HOST',     'vps3323197.trouble-free.net');
-define('DB_NAME',     'mayu_NIAAPP');
-define('DB_USER',     'mayu_NIAAPP');
-define('DB_PASS',     'uSY3VUPJ8x');
-define('DB_CHARSET',  'utf8mb4');
-define('DB_PREFIX',   'nia_');
+if (!defined('ADMINCP'))      define('ADMINCP',     'moderator');
+if (!defined('MEDIA_FOLDER')) define('MEDIA_FOLDER', ABSPATH . 'media');
+if (!defined('TMP_FOLDER'))   define('TMP_FOLDER',   ABSPATH . 'tmp');
+if (!defined('CACHE_ENABLED')) define('CACHE_ENABLED', true);
 
 // -----------------------------------------------------------------------------
-// Site & paths
+// Security (set these in production via env or local config)
 // -----------------------------------------------------------------------------
-define('SITE_URL',    'https://vdo.nia.yt');
-define('ADMINCP',     'moderator');           // Admin base path, e.g. /moderator/
-define('MEDIA_FOLDER', ABSPATH . 'media');
-define('TMP_FOLDER',   ABSPATH . 'tmp');
-define('CACHE_ENABLED', true);
-
-// -----------------------------------------------------------------------------
-// Security (set these in production)
-// -----------------------------------------------------------------------------
-define('COOKIEKEY',   'change-this-cookie-key');
-define('SECRETSALT',  'change-this-secret-salt');
+if (!defined('COOKIEKEY'))   define('COOKIEKEY',   getenv('COOKIEKEY') ?: 'change-this-cookie-key');
+if (!defined('SECRETSALT'))  define('SECRETSALT',  getenv('SECRETSALT') ?: 'change-this-secret-salt');
 
 // -----------------------------------------------------------------------------
 // Optional: OAuth (leave empty to disable)
 // -----------------------------------------------------------------------------
-define('FB_APP_ID',     '');
-define('FB_APP_SECRET', '');
-define('GOOGLE_CLIENT_ID', '');
-define('GOOGLE_CLIENT_SECRET', '');
+if (!defined('FB_APP_ID'))     define('FB_APP_ID',     getenv('FB_APP_ID') ?: '');
+if (!defined('FB_APP_SECRET')) define('FB_APP_SECRET', getenv('FB_APP_SECRET') ?: '');
+if (!defined('GOOGLE_CLIENT_ID')) define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');
+if (!defined('GOOGLE_CLIENT_SECRET')) define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '');
 
 // -----------------------------------------------------------------------------
 // Optional: Payments / Mail
 // -----------------------------------------------------------------------------
-define('PAYPAL_CLIENT_ID', '');
-define('PAYPAL_SECRET',    '');
-define('SMTP_HOST', '');
-define('SMTP_PORT', 587);
-define('SMTP_USER', '');
-define('SMTP_PASS', '');
-define('MAIL_FROM', 'noreply@yoursite.com');
+if (!defined('PAYPAL_CLIENT_ID')) define('PAYPAL_CLIENT_ID', getenv('PAYPAL_CLIENT_ID') ?: '');
+if (!defined('PAYPAL_SECRET'))    define('PAYPAL_SECRET',    getenv('PAYPAL_SECRET') ?: '');
+if (!defined('SMTP_HOST')) define('SMTP_HOST', getenv('SMTP_HOST') ?: '');
+if (!defined('SMTP_PORT')) define('SMTP_PORT', (int) (getenv('SMTP_PORT') ?: 587));
+if (!defined('SMTP_USER')) define('SMTP_USER', getenv('SMTP_USER') ?: '');
+if (!defined('SMTP_PASS')) define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+if (!defined('MAIL_FROM')) define('MAIL_FROM', getenv('MAIL_FROM') ?: 'noreply@yoursite.com');
 
 // -----------------------------------------------------------------------------
 // Loader

@@ -5,6 +5,11 @@ node_modules/
 .env
 .env.local
 .env.*.local
+nia_config.local.php
+
+# Temporary / diagnostic scripts (do not commit)
+diagnose_500.php
+hostinger_check.php
 
 # Build output
 client/dist/

@@ -175,12 +175,8 @@ if ($type === 'playlists') {
 // ---------- PROFILE VIDEOS / MUSIC ----------
 if (($type === 'profile_videos' || $type === 'profile_music') && $user_id > 0) {
     $media_type = $type === 'profile_music' ? 'music' : 'video';
-    $sql = "SELECT * FROM {$pre}videos WHERE user_id = ? AND type = ?";
-    $params = [$user_id, $media_type];
-    if ($type === 'profile_videos') {
-        $sql .= " AND (private = 0 OR user_id = ?)";
-        $params[] = $uid;
-    }
+    $sql = "SELECT * FROM {$pre}videos WHERE user_id = ? AND type = ? AND (private = 0 OR user_id = ?)";
+    $params = [$user_id, $media_type, $uid];
     $sql .= " ORDER BY created_at DESC LIMIT " . ($limit + 1) . " OFFSET " . $offset;
     $rows = $db->fetchAll($sql, $params);
     $rows = is_array($rows) ? $rows : [];

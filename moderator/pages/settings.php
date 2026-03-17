@@ -257,9 +257,10 @@ include dirname(__DIR__) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . '
             </div>
 
             <hr class="my-5">
-            
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
+
+            <h5 class="mb-3 d-flex align-items-center"><span class="material-icons me-2">extension</span> Plugin settings</h5>
+            <div id="plugin-settings" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="flex-grow-1">
                     <?php if (function_exists('do_action')) { do_action('vibe_plugin_settings'); } ?>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm d-flex align-items-center">

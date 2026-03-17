@@ -45,7 +45,7 @@ try {
     if (ini_get('display_errors')) {
         echo '<h1>Error</h1><p>' . htmlspecialchars($e->getMessage()) . '</p><p>' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
     } else {
-        echo '<h1>Site temporarily unavailable</h1><p>Check <code>tmp/error.log</code> on the server or run <code>diagnose_500.php</code> for details.</p>';
+        echo '<h1>Site temporarily unavailable</h1><p>Check <code>tmp/error.log</code> on the server for details.</p>';
     }
     exit;
 }

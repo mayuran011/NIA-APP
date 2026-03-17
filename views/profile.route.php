@@ -67,7 +67,7 @@ require ABSPATH . 'themes' . DIRECTORY_SEPARATOR . 'main' . DIRECTORY_SEPARATOR 
                 if ($has_more_profile) $rows = array_slice($rows, 0, $profile_per);
                 foreach ($rows as $r) { $items[] = is_array($r) ? (object) $r : $r; }
             } elseif ($tab === 'music') {
-                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'music' ORDER BY created_at DESC LIMIT " . ($profile_per + 1), [$profile_user->id]);
+                $rows = $db->fetchAll("SELECT * FROM {$pre}videos WHERE user_id = ? AND type = 'music' AND (private = 0 OR user_id = ?) ORDER BY created_at DESC LIMIT " . ($profile_per + 1), [$profile_user->id, current_user_id()]);
                 $has_more_profile = count($rows) > $profile_per;
                 if ($has_more_profile) $rows = array_slice($rows, 0, $profile_per);
                 foreach ($rows as $r) { $items[] = is_array($r) ? (object) $r : $r; }
