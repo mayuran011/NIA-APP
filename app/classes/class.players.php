@@ -82,13 +82,14 @@ class NiaPlayers {
         $thumb  = $video->thumb ?? '';
         $is_music = self::isMusicPlayer($video);
 
-        // YouTube: use YouTube's native player (plain iframe, no custom controls/overlays)
+        // YouTube: Nia Video Player embed (YT API + Media Session for lock screen / background play)
         if ($source === 'youtube' && $url) {
-            return self::renderEmbedIframe($url, $container_id, $title, $autoplay);
+            $artwork = ($thumb !== '' && strpos($thumb, 'http') === 0) ? $thumb : (($thumb !== '') ? rtrim(SITE_URL, '/') . '/' . ltrim($thumb, '/') : '');
+            return self::renderNiaVideoPlayerEmbed($url, $container_id, $title, $autoplay, $artwork);
         }
         // Vimeo / Dailymotion / etc.: Nia Video Player (embed with custom chrome)
         if (in_array($source, ['vimeo', 'dailymotion', 'twitch', 'facebook', 'vine', 'gdrive'], true) && $url) {
-            return self::renderNiaVideoPlayerEmbed($url, $container_id, $title, $autoplay);
+            return self::renderNiaVideoPlayerEmbed($url, $container_id, $title, $autoplay, '');
         }
 
         // Direct video URL (MP4 etc.): Nia Video Player (native)
@@ -98,7 +99,7 @@ class NiaPlayers {
 
         // Remote URL (non-embed source): Nia Video Player (embed) or legacy
         if ($source === 'remote' && $url && self::remotePlayer() === 'embed') {
-            return self::renderNiaVideoPlayerEmbed($url, $container_id, $title, $autoplay);
+            return self::renderNiaVideoPlayerEmbed($url, $container_id, $title, $autoplay, '');
         }
 
         // Music: VideoJS + WaveSurfer (vjswaveplayer)
@@ -159,8 +160,10 @@ class NiaPlayers {
             . '<div class="nia-vp-yt-cover nia-vp-yt-cover-bottom" aria-hidden="true"></div>'
             . '<div class="nia-vp-yt-cover nia-vp-yt-cover-corner" aria-hidden="true"></div>'
             : '';
+        $dataTitle = $title !== '' ? ' data-nia-vp-title="' . _e($title) . '"' : '';
+        $dataArtwork = $artwork !== '' ? ' data-nia-vp-artwork="' . _e($artwork) . '"' : '';
         $html = '<link rel="stylesheet" href="' . _e($cssUrl) . '">' .
-            '<div class="nia-video-player nia-vp-embed position-relative bg-black" id="' . _e($container_id) . '" data-nia-vp-embed="1"' . $dataYt . ' style="position:relative; width:100%; padding-bottom:56.25%; height:0; overflow:hidden;">' .
+            '<div class="nia-video-player nia-vp-embed position-relative bg-black" id="' . _e($container_id) . '" data-nia-vp-embed="1"' . $dataYt . $dataTitle . $dataArtwork . ' style="position:relative; width:100%; padding-bottom:56.25%; height:0; overflow:hidden;">' .
             $logoHtml .
             '<div class="nia-vp-media" style="position:absolute; top:0; left:0; width:100%; height:100%;"><div class="nia-vp-iframe-wrap" style="width:100%; height:100%;">' .
             '<iframe id="' . $iframeId . '" src="' . _e($embedUrl) . '" title="' . _e($title) . '" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"></iframe>' .
@@ -196,11 +199,13 @@ class NiaPlayers {
         $cssUrl = url('themes/main/nia-video-player.css');
         $jsUrl = url('themes/main/nia-video-player.js');
         $videoElId = _e($container_id) . '-el';
+        $dataTitle = isset($video->title) && $video->title !== '' ? ' data-nia-vp-title="' . _e($video->title) . '"' : '';
+        $dataArtwork = $thumb !== '' ? ' data-nia-vp-artwork="' . $thumb . '"' : '';
         $html = '<link rel="stylesheet" href="' . _e($cssUrl) . '">' .
-            '<div class="nia-video-player nia-vp-native" id="' . _e($container_id) . '" data-nia-vp-src="' . _e($url) . '">' .
+            '<div class="nia-video-player nia-vp-native" id="' . _e($container_id) . '" data-nia-vp-src="' . _e($url) . '"' . $dataTitle . $dataArtwork . '>' .
             $logoHtml .
             '<div class="nia-vp-media">' .
-            '<video id="' . $videoElId . '" class="nia-vp-video" preload="metadata" playsinline ' . $autoplay . ' poster="' . $thumb . '">' .
+            '<video id="' . $videoElId . '" class="nia-vp-video" preload="metadata" playsinline webkit-playsinline ' . $autoplay . ' poster="' . $thumb . '">' .
             '<source src="' . _e($url) . '" type="video/mp4">' . $trackHtml . '</video>' .
             '<div class="nia-vp-poster"' . ($thumb !== '' ? ' style="background-image:url(' . $thumb . ')"' : '') . '></div>' .
             '</div>' .
@@ -256,12 +261,14 @@ class NiaPlayers {
 
     protected static function renderVideoJsWaveSurfer($video, $container_id, $opts) {
         $url = self::playbackUrl($video);
-        $title = _e($video->title ?? '');
-        $thumb = _e($video->thumb ?? '');
+        $title = $video->title ?? '';
+        $thumb = $video->thumb ?? '';
+        if ($thumb !== '' && strpos($thumb, 'http') !== 0) $thumb = rtrim(SITE_URL, '/') . '/' . ltrim($thumb, '/');
         $autoplay = !empty($opts['autoplay']) ? ' autoplay' : '';
-        $base = rtrim(SITE_URL, '/');
-        return '<div class="nia-player-container nia-music-player position-relative" id="' . _e($container_id) . '">' .
-            '<audio id="' . _e($container_id) . '-el" class="vjs-wavesurfer-audio" controls preload="metadata" ' . $autoplay . '>' .
+        $dataTitle = $title !== '' ? ' data-nia-vp-title="' . _e($title) . '"' : '';
+        $dataArtwork = $thumb !== '' ? ' data-nia-vp-artwork="' . _e($thumb) . '"' : '';
+        return '<div class="nia-player-container nia-music-player position-relative" id="' . _e($container_id) . '"' . $dataTitle . $dataArtwork . '>' .
+            '<audio id="' . _e($container_id) . '-el" class="vjs-wavesurfer-audio" controls preload="metadata" playsinline ' . $autoplay . '>' .
             '<source src="' . _e($url) . '" type="audio/mpeg">' .
             '</audio>' .
             '<div id="' . _e($container_id) . '-wave" class="nia-waveform"></div>' .
@@ -269,7 +276,11 @@ class NiaPlayers {
             '<script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>' .
             '<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">' .
             '<script>' .
-            '(function(){ var cid="' . _e($container_id) . '"; var audio=document.getElementById(cid+"-el"); var waveEl=document.getElementById(cid+"-wave"); if(!audio||!waveEl) return; if(typeof videojs !== "undefined" && typeof WaveSurfer !== "undefined") { videojs(audio).ready(function(){ var w=WaveSurfer.create({ container: waveEl, waveColor: "#6366f1", progressColor: "#4f46e5", height: 64 }); w.load(audio.querySelector("source").src); audio.addEventListener("play", function(){ w.play(); }); audio.addEventListener("pause", function(){ w.pause(); }); }); } })();' .
+            '(function(){ var cid="' . _e($container_id) . '"; var audio=document.getElementById(cid+"-el"); var waveEl=document.getElementById(cid+"-wave"); if(!audio||!waveEl) return; ' .
+            'function setupMediaSession(){ if(!("mediaSession" in navigator)) return; var c=document.getElementById(cid); var title=(c&&c.getAttribute("data-nia-vp-title"))||""; var artwork=(c&&c.getAttribute("data-nia-vp-artwork"))||""; navigator.mediaSession.metadata=new MediaMetadata({ title: title, artist: "", artwork: artwork ? [{ src: artwork, sizes: "512x512", type: "image/jpeg" }] : [] }); navigator.mediaSession.setActionHandler("play", function(){ audio.play(); }); navigator.mediaSession.setActionHandler("pause", function(){ audio.pause(); }); navigator.mediaSession.setActionHandler("seekbackward", function(){ audio.currentTime=Math.max(0, audio.currentTime-10); }); navigator.mediaSession.setActionHandler("seekforward", function(){ audio.currentTime=Math.min(audio.duration, audio.currentTime+10); }); navigator.mediaSession.setActionHandler("seekto", function(d){ if(d.seekTime!=null) audio.currentTime=d.seekTime; }); } ' .
+            'audio.addEventListener("play", function(){ setupMediaSession(); if("setPositionState" in navigator.mediaSession && audio.duration && isFinite(audio.duration)) navigator.mediaSession.setPositionState({ duration: audio.duration, playbackRate: audio.playbackRate, position: audio.currentTime }); }); ' .
+            'audio.addEventListener("timeupdate", function(){ if(navigator.mediaSession.setPositionState && audio.duration && isFinite(audio.duration)) try{ navigator.mediaSession.setPositionState({ duration: audio.duration, playbackRate: audio.playbackRate, position: audio.currentTime }); } catch(e){} }); ' .
+            'if(typeof videojs !== "undefined" && typeof WaveSurfer !== "undefined") { videojs(audio).ready(function(){ var w=WaveSurfer.create({ container: waveEl, waveColor: "#6366f1", progressColor: "#4f46e5", height: 64 }); w.load(audio.querySelector("source").src); audio.addEventListener("play", function(){ w.play(); }); audio.addEventListener("pause", function(){ w.pause(); }); }); } })();' .
             '</script>' .
             '</div>';
     }

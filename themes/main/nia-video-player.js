@@ -17,6 +17,49 @@
         return m + ':' + (s < 10 ? '0' : '') + s;
     }
 
+    function setupMediaSession(container, opts) {
+        if (!container || !('mediaSession' in navigator)) return;
+        var title = container.getAttribute('data-nia-vp-title') || '';
+        var artwork = container.getAttribute('data-nia-vp-artwork') || '';
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: '',
+                album: '',
+                artwork: artwork ? [{ src: artwork, sizes: '512x512', type: 'image/jpeg' }] : []
+            });
+        } catch (e) { return; }
+        if (opts.video) {
+            var video = opts.video;
+            navigator.mediaSession.setActionHandler('play', function () { video.play(); });
+            navigator.mediaSession.setActionHandler('pause', function () { video.pause(); });
+            navigator.mediaSession.setActionHandler('seekbackward', function () { video.currentTime = Math.max(0, video.currentTime - 10); });
+            navigator.mediaSession.setActionHandler('seekforward', function () { video.currentTime = Math.min(video.duration, video.currentTime + 10); });
+            navigator.mediaSession.setActionHandler('seekto', function (d) { if (d.seekTime != null) video.currentTime = d.seekTime; });
+            function updatePosition() {
+                if (video.duration && isFinite(video.duration) && navigator.mediaSession.setPositionState) {
+                    try { navigator.mediaSession.setPositionState({ duration: video.duration, playbackRate: video.playbackRate, position: video.currentTime }); } catch (err) {}
+                }
+            }
+            video.addEventListener('timeupdate', updatePosition);
+            video.addEventListener('durationchange', updatePosition);
+        }
+        if (opts.ytPlayer) {
+            var yt = opts.ytPlayer;
+            navigator.mediaSession.setActionHandler('play', function () { if (typeof yt.playVideo === 'function') yt.playVideo(); });
+            navigator.mediaSession.setActionHandler('pause', function () { if (typeof yt.pauseVideo === 'function') yt.pauseVideo(); });
+            navigator.mediaSession.setActionHandler('seekbackward', function () {
+                if (typeof yt.getCurrentTime === 'function' && typeof yt.seekTo === 'function') yt.seekTo(Math.max(0, yt.getCurrentTime() - 10), true);
+            });
+            navigator.mediaSession.setActionHandler('seekforward', function () {
+                if (typeof yt.getCurrentTime === 'function' && typeof yt.getDuration === 'function' && typeof yt.seekTo === 'function') yt.seekTo(Math.min(yt.getDuration(), yt.getCurrentTime() + 10), true);
+            });
+            navigator.mediaSession.setActionHandler('seekto', function (d) {
+                if (d.seekTime != null && typeof yt.seekTo === 'function') yt.seekTo(d.seekTime, true);
+            });
+        }
+    }
+
     function init(container) {
         if (!container || !container.classList || !container.classList.contains('nia-video-player')) return;
         var video = container.querySelector('.nia-vp-video, video');
@@ -190,6 +233,7 @@
                     });
                 }
             }
+            setupMediaSession(container, { video: video });
         } else if (iframeWrap) {
             var iframe = iframeWrap.querySelector('iframe');
             var ytId = container.getAttribute('data-nia-vp-yt-id');
@@ -222,6 +266,7 @@
                                     container._niaVpYtPlayer = p;
                                     if (durationEl) durationEl.textContent = formatTime(p.getDuration() || 0);
                                     if (loadingEl) container.classList.remove('nia-vp-loading');
+                                    setupMediaSession(container, { ytPlayer: p });
                                     if (bigPlay) {
                                         bigPlay.addEventListener('click', function () {
                                             if (p.getPlayerState() === 1) p.pauseVideo(); else p.playVideo();
@@ -302,6 +347,9 @@
                                             if (progressBar && d && isFinite(d)) {
                                                 var pct = (100 * t / d) || 0;
                                                 progressBar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+                                            }
+                                            if (navigator.mediaSession && navigator.mediaSession.setPositionState && d && isFinite(d)) {
+                                                try { navigator.mediaSession.setPositionState({ duration: d, playbackRate: 1, position: t }); } catch (err) {}
                                             }
                                         }, 250);
                                     } else {
