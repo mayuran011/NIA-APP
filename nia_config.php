@@ -20,22 +20,29 @@ if (is_file($local_config)) {
     require_once $local_config;
 }
 
+// Helper: read env (getenv or $_ENV for host compatibility)
+$env = function ($key, $default = '') {
+    $v = getenv($key);
+    if ($v !== false && $v !== '') return $v;
+    return (isset($_ENV[$key]) && $_ENV[$key] !== '') ? $_ENV[$key] : $default;
+};
+
 // -----------------------------------------------------------------------------
 // Database – from environment or local config (no credentials in this file)
 // -----------------------------------------------------------------------------
-if (!defined('DB_HOST'))     define('DB_HOST',     getenv('DB_HOST') ?: 'localhost');
-if (!defined('DB_NAME'))     define('DB_NAME',     getenv('DB_NAME') ?: 'nia_local');
-if (!defined('DB_USER'))     define('DB_USER',     getenv('DB_USER') ?: 'root');
-if (!defined('DB_PASS'))     define('DB_PASS',     getenv('DB_PASS') ?: '');
-if (!defined('DB_CHARSET'))  define('DB_CHARSET',  getenv('DB_CHARSET') ?: 'utf8mb4');
-if (!defined('DB_PREFIX'))   define('DB_PREFIX',   getenv('DB_PREFIX') ?: 'nia_');
+if (!defined('DB_HOST'))     define('DB_HOST',     $env('DB_HOST', 'localhost'));
+if (!defined('DB_NAME'))     define('DB_NAME',     $env('DB_NAME', 'nia_local'));
+if (!defined('DB_USER'))     define('DB_USER',     $env('DB_USER', 'root'));
+if (!defined('DB_PASS'))     define('DB_PASS',     $env('DB_PASS', ''));
+if (!defined('DB_CHARSET'))  define('DB_CHARSET',  $env('DB_CHARSET', 'utf8mb4'));
+if (!defined('DB_PREFIX'))   define('DB_PREFIX',   $env('DB_PREFIX', 'nia_'));
 
 // -----------------------------------------------------------------------------
 // Site & paths – SITE_URL from environment or local config
 // -----------------------------------------------------------------------------
 if (!defined('SITE_URL')) {
-    $site_url = getenv('SITE_URL');
-    if ($site_url === false || $site_url === '') {
+    $site_url = $env('SITE_URL', '');
+    if ($site_url === '') {
         $site_url = 'http://localhost';
         if (!empty($_SERVER['HTTP_HOST'])) {
             $site_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];

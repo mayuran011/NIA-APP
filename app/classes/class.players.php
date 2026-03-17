@@ -141,7 +141,7 @@ class NiaPlayers {
      * Nia Video Player — embed (YouTube, Vimeo, etc.): same chrome, iframe inside.
      * Plain embed URL so video always displays; optional YouTube API can be enabled via data-nia-vp-yt-id.
      */
-    protected static function renderNiaVideoPlayerEmbed($embedUrl, $container_id, $title, $autoplay) {
+    protected static function renderNiaVideoPlayerEmbed($embedUrl, $container_id, $title, $autoplay, $artwork = '') {
         $sep = strpos($embedUrl, '?') !== false ? '&' : '?';
         if ($autoplay) $embedUrl .= $sep . 'autoplay=1';
         $ytId = null;
