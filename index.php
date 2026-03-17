@@ -42,10 +42,16 @@ try {
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: text/html; charset=utf-8');
     }
+    $msg = $e->getMessage();
+    $file = $e->getFile();
+    $line = $e->getLine();
     if (ini_get('display_errors')) {
-        echo '<h1>Error</h1><p>' . htmlspecialchars($e->getMessage()) . '</p><p>' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        echo '<h1>Error</h1><p>' . htmlspecialchars($msg) . '</p><p>' . htmlspecialchars($file) . ':' . $line . '</p><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
     } else {
-        echo '<h1>Site temporarily unavailable</h1><p>Check <code>tmp/error.log</code> on the server for details.</p>';
+        echo '<h1>Site temporarily unavailable</h1>';
+        echo '<p><strong>Error:</strong> <code>' . htmlspecialchars($msg) . '</code></p>';
+        echo '<p><small>' . htmlspecialchars($file) . ':' . $line . '</small></p>';
+        echo '<p>Full trace is in <code>tmp/error.log</code> on the server. To fix: set database and SITE_URL in <code>nia_config.local.php</code> or environment variables (see nia_config.local.sample.php).</p>';
     }
     exit;
 }
